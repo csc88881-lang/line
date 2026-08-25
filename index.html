@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LINE 貼圖智慧去背與 5x4 自動切圖工作站 | Sticker Studio Pro</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- JSZip for batch download -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <!-- FileSaver.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+  <!-- Top Navigation -->
+  <header class="app-header">
+    <div class="logo-area">
+      <div class="logo-icon">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+      </div>
+      <div class="logo-text">
+        <h1>Sticker Studio <span>PRO</span></h1>
+        <p>LINE 貼圖綠幕智慧去背 & 5×4 自動切割工作站</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-outline" id="loadSampleBtn" title="載入台股壁虎貼圖 20 張範例">
+        <i class="fa-solid fa-wand-sparkles"></i> 載入台股貼圖範例 (20張)
+      </button>
+      <button class="btn btn-primary" id="exportAllZipBtn" disabled>
+        <i class="fa-solid fa-file-zipper"></i> 一鍵打包 LINE 貼圖包 (ZIP)
+      </button>
+    </div>
+  </header>
+
+  <!-- Main App Layout -->
+  <main class="app-main">
+    <!-- Left Sidebar: Controls & Tools -->
+    <aside class="sidebar-panel">
+      <!-- Upload Section -->
+      <section class="panel-section">
+        <div class="section-title">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <span>圖片來源</span>
+        </div>
+        <div class="drop-zone" id="dropZone">
+          <input type="file" id="fileInput" accept="image/*" class="file-input-hidden">
+          <div class="drop-content">
+            <i class="fa-solid fa-image-polaroid drop-icon"></i>
+            <p class="drop-text">拖曳圖片到此處 或 <span>點擊上傳</span></p>
+            <span class="drop-sub">支援 2560x1664 大圖、PNG、JPG、WEBP</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Chroma Key / Background Removal Settings -->
+      <section class="panel-section">
+        <div class="section-title">
+          <i class="fa-solid fa-sliders"></i>
+          <span>綠幕去背參數 (Chroma Key)</span>
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>背景基準色</span>
+            <div class="color-picker-wrapper">
+              <input type="color" id="keyColorInput" value="#07FD04">
+              <span id="keyColorVal">#07FD04</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>去背靈敏度 (Threshold)</span>
+            <span class="val-badge" id="threshVal">55</span>
+          </div>
+          <input type="range" id="thresholdSlider" min="5" max="100" value="55" class="range-slider">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>邊緣平滑過渡 (Smoothness)</span>
+            <span class="val-badge" id="smoothVal">20</span>
+          </div>
+          <input type="range" id="smoothnessSlider" min="2" max="60" value="20" class="range-slider">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>防綠邊溢色消除 (Spill Despill)</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="despillToggle" checked>
+              <span class="slider round"></span>
+            </label>
+          </div>
+          <p class="control-hint">消除白色模切外框邊緣的綠色反光，維持白邊純淨</p>
+        </div>
+      </section>
+
+      <!-- Grid Slicing Settings -->
+      <section class="panel-section">
+        <div class="section-title">
+          <i class="fa-solid fa-table-cells"></i>
+          <span>網格切割設定 (Grid Slicing)</span>
+        </div>
+
+        <div class="grid-presets">
+          <button class="preset-btn active" data-cols="5" data-rows="4">5 × 4 (20張 - 標準)</button>
+          <button class="preset-btn" data-cols="4" data-rows="6">4 × 6 (24張)</button>
+          <button class="preset-btn" data-cols="4" data-rows="4">4 × 4 (16張)</button>
+          <button class="preset-btn" data-cols="4" data-rows="2">4 × 2 (8張)</button>
+        </div>
+
+        <div class="grid-inputs-row">
+          <div class="input-field">
+            <label>直欄 (Columns)</label>
+            <input type="number" id="colsInput" min="1" max="10" value="5">
+          </div>
+          <div class="input-field">
+            <label>橫排 (Rows)</label>
+            <input type="number" id="rowsInput" min="1" max="10" value="4">
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>主體自動緊縮留白 (Safe Padding)</span>
+            <span class="val-badge" id="paddingVal">10px</span>
+          </div>
+          <input type="range" id="paddingSlider" min="0" max="30" value="10" class="range-slider">
+        </div>
+      </section>
+
+      <!-- LINE Specification Rules -->
+      <section class="panel-section">
+        <div class="section-title">
+          <i class="fa-brands fa-line" style="color: #06c755;"></i>
+          <span>LINE 貼圖官方規範自動適配</span>
+        </div>
+        <ul class="spec-list">
+          <li><i class="fa-solid fa-circle-check"></i> 最大尺寸：370 × 320 px (自動等比放大)</li>
+          <li><i class="fa-solid fa-circle-check"></i> 強制偶數像素寬高 (Even Dimensions)</li>
+          <li><i class="fa-solid fa-circle-check"></i> 自動產生 <code>main.png</code> (240×240)</li>
+          <li><i class="fa-solid fa-circle-check"></i> 自動產生 <code>tab.png</code> (96×74)</li>
+        </ul>
+      </section>
+    </aside>
+
+    <!-- Center Workspace: Canvas Viewport -->
+    <section class="workspace-area">
+      <!-- Workspace Toolbar -->
+      <div class="workspace-toolbar">
+        <div class="view-tabs">
+          <button class="view-tab active" id="tabProcessed" data-view="processed">
+            <i class="fa-solid fa-wand-magic"></i> 去背效果預覽
+          </button>
+          <button class="view-tab" id="tabGrid" data-view="grid">
+            <i class="fa-solid fa-grid-2"></i> 5×4 網格切割線
+          </button>
+          <button class="view-tab" id="tabSplit" data-view="split">
+            <i class="fa-solid fa-arrows-split-up-and-left"></i> 即時對比 (Before/After)
+          </button>
+        </div>
+
+        <div class="bg-selector">
+          <span class="bg-label">預覽背景:</span>
+          <button class="bg-btn active bg-checker" data-bg="checker" title="透明棋盤格"></button>
+          <button class="bg-btn bg-dark" data-bg="dark" title="深黑底色"></button>
+          <button class="bg-btn bg-white" data-bg="white" title="純白底色"></button>
+          <button class="bg-btn bg-line" data-bg="line" title="LINE 經典聊天底色"></button>
+        </div>
+      </div>
+
+      <!-- Canvas Container -->
+      <div class="canvas-viewport" id="canvasViewport">
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">
+            <i class="fa-solid fa-layer-group"></i>
+          </div>
+          <h3>尚未載入圖片</h3>
+          <p>請從左側上傳 5×4 綠幕貼圖大圖，或點擊下方按鈕直接載入台股壁虎範例！</p>
+          <button class="btn btn-primary" id="emptyLoadSampleBtn">
+            <i class="fa-solid fa-sparkles"></i> 載入台股壁虎貼圖範例 (20格)
+          </button>
+        </div>
+
+        <!-- Realtime Processing Stage -->
+        <div class="canvas-stage hidden" id="canvasStage">
+          <div class="canvas-wrapper bg-checker" id="canvasWrapper">
+            <canvas id="mainCanvas"></canvas>
+            <!-- Split Compare Overlay -->
+            <div class="split-overlay hidden" id="splitOverlay">
+              <canvas id="splitCanvas"></canvas>
+              <div class="split-divider" id="splitDivider">
+                <div class="split-handle">
+                  <i class="fa-solid fa-arrows-left-right"></i>
+                </div>
+              </div>
+            </div>
+            <!-- Grid Cutline Overlay -->
+            <svg class="grid-overlay-svg" id="gridSvg"></svg>
+          </div>
+        </div>
+
+        <!-- Processing Status Bar -->
+        <div class="processing-badge hidden" id="processingBadge">
+          <i class="fa-solid fa-spinner fa-spin"></i> 處理中...
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Sidebar: Stickers Gallery & LINE Simulator -->
+    <aside class="gallery-panel">
+      <div class="gallery-tabs">
+        <button class="g-tab active" id="tabStickerList">
+          <i class="fa-solid fa-grid"></i> 貼圖清單 (<span id="stickerCountBadge">20</span>)
+        </button>
+        <button class="g-tab" id="tabLineSim">
+          <i class="fa-brands fa-line" style="color: #06c755;"></i> LINE 聊天室模擬
+        </button>
+      </div>
+
+      <!-- Sticker Thumbnails View -->
+      <div class="gallery-content" id="stickerListView">
+        <div class="gallery-actions-bar">
+          <span class="gallery-stats" id="galleryStatsText">點擊貼圖可放大下載</span>
+          <button class="btn btn-sm btn-outline" id="reprocessBtn" title="重新計算所有貼圖">
+            <i class="fa-solid fa-rotate"></i> 重新切圖
+          </button>
+        </div>
+
+        <div class="stickers-grid" id="stickersGrid">
+          <!-- Filled dynamically by JavaScript -->
+        </div>
+
+        <!-- Special Assets (Main & Tab) -->
+        <div class="special-assets-box">
+          <div class="special-asset-item">
+            <div class="special-thumb" id="mainThumbPreview">
+              <img id="mainImgPreview" src="" alt="Main Icon">
+            </div>
+            <div class="special-info">
+              <h4>main.png (240×240)</h4>
+              <p>LINE 貼圖主選單圖示</p>
+              <button class="btn btn-xs btn-outline" id="downloadMainBtn"><i class="fa-solid fa-download"></i> 下載</button>
+            </div>
+          </div>
+
+          <div class="special-asset-item">
+            <div class="special-thumb" id="tabThumbPreview">
+              <img id="tabImgPreview" src="" alt="Tab Icon">
+            </div>
+            <div class="special-info">
+              <h4>tab.png (96×74)</h4>
+              <p>LINE 貼圖標籤頁籤圖示</p>
+              <button class="btn btn-xs btn-outline" id="downloadTabBtn"><i class="fa-solid fa-download"></i> 下載</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LINE Chatroom Simulator View -->
+      <div class="gallery-content hidden" id="lineSimView">
+        <div class="line-phone-mockup">
+          <div class="phone-header">
+            <div class="phone-back"><i class="fa-solid fa-chevron-left"></i></div>
+            <div class="phone-title">
+              <span class="friend-name">投資交流群 📈</span>
+              <span class="chat-members"><i class="fa-solid fa-users"></i> 20</span>
+            </div>
+            <div class="phone-actions"><i class="fa-solid fa-magnifying-glass"></i> <i class="fa-solid fa-bars"></i></div>
+          </div>
+
+          <div class="chat-messages-area" id="chatMessagesArea">
+            <div class="chat-date">今天</div>
+            <div class="msg-bubble left">
+              <div class="avatar">👨‍💼</div>
+              <div class="bubble-content">
+                <p>今天大盤萬八站穩了嗎？大家手上的持股表現如何？</p>
+                <span class="msg-time">09:15</span>
+              </div>
+            </div>
+            <div class="msg-bubble right" id="sampleSentSticker">
+              <!-- Animated sample sticker -->
+              <div class="sticker-bubble" id="simStickerTarget">
+                <img id="simStickerImg" src="" alt="LINE Sticker">
+                <span class="msg-time">09:16 <span class="read-status">已讀</span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- LINE Sticker Picker Keyboard -->
+          <div class="phone-sticker-keyboard">
+            <div class="keyboard-header">
+              <span>點擊下方貼圖即時發送測試：</span>
+            </div>
+            <div class="keyboard-grid" id="simKeyboardGrid">
+              <!-- Dynamic mini sticker list -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Single Sticker Modal Preview & Edit -->
+  <div class="modal-overlay hidden" id="stickerModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <h3 id="modalTitle">貼圖微調編輯器 (01.png)</h3>
+          <div class="modal-badges" id="modalBadges"></div>
+        </div>
+        <button class="modal-close" id="modalCloseBtn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <!-- Editor Canvas Box -->
+        <div class="modal-canvas-area">
+          <div class="modal-preview-box bg-checker" id="modalPreviewBox">
+            <canvas id="editorCanvas"></canvas>
+            <div class="brush-cursor" id="brushCursor"></div>
+          </div>
+
+          <!-- Eraser Toolbar -->
+          <div class="editor-toolbar">
+            <div class="toolbar-left">
+              <span class="tool-label"><i class="fa-solid fa-eraser"></i> 橡皮擦模式</span>
+              <div class="brush-size-control">
+                <span>筆刷:</span>
+                <input type="range" id="brushSizeSlider" min="2" max="40" value="12" class="range-slider">
+                <span class="val-badge" id="brushSizeVal">12px</span>
+              </div>
+            </div>
+            <div class="toolbar-right">
+              <button class="btn btn-xs btn-outline" id="editorResetBtn" title="還原至原始去背狀態">
+                <i class="fa-solid fa-rotate-left"></i> 重設
+              </button>
+              <button class="btn btn-xs btn-primary" id="editorSaveBtn" title="儲存微調修改">
+                <i class="fa-solid fa-check"></i> 儲存微調
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info & Actions Panel -->
+        <div class="modal-info-panel">
+          <div class="info-row">
+            <span class="info-label">檔名:</span>
+            <span class="info-value" id="modalFilename">01.png</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">解析度:</span>
+            <span class="info-value" id="modalDimensions">370 × 320 px (LINE 偶數規範)</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">檔案格式:</span>
+            <span class="info-value">PNG (32-bit 透明去背)</span>
+          </div>
+          
+          <div class="modal-status-box" id="modalStatusBox">
+            <p class="modal-hint"><i class="fa-solid fa-info-circle"></i> 可在左側畫布直接用滑鼠塗抹擦除殘留雜點，微調完成請按「儲存微調」。</p>
+          </div>
+
+          <div class="modal-actions">
+            <button class="btn btn-card-main-lg" id="modalSetMainBtn">
+              <i class="fa-solid fa-star"></i> <span>設為 Main 封面</span>
+            </button>
+            <button class="btn btn-card-tab-lg" id="modalSetTabBtn">
+              <i class="fa-solid fa-tag"></i> <span>設為 Tab 標籤</span>
+            </button>
+            <button class="btn btn-primary" id="modalDownloadBtn">
+              <i class="fa-solid fa-download"></i> 下載此張 PNG
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
