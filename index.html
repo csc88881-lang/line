@@ -268,6 +268,23 @@
           </div>
           <input type="range" id="paddingSlider" min="0" max="30" value="10" class="w-full accent-indigo-500 h-1.5 bg-[#222e42] rounded-lg cursor-pointer">
         </div>
+
+        <!-- 一鍵全格智慧防超線對齊按鈕 -->
+        <div class="pt-2 border-t border-[#222e42] space-y-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-amber-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+              <span>智慧防超線對齊</span>
+            </span>
+            <span class="text-[9px] text-emerald-400 font-semibold bg-emerald-950/40 px-1 py-0.2 rounded border border-emerald-500/30">AI 主體偵測</span>
+          </div>
+          <button id="btnAutoAlignAll" class="w-full py-1.5 px-2 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 transition flex items-center justify-center gap-1.5 shadow-md shadow-amber-950/40">
+            <i class="fa-solid fa-arrows-to-circle"></i> 一鍵全部貼圖自動對齊 (防超線)
+          </button>
+          <span class="text-[9px] text-slate-400 leading-tight block">
+            自動分析每格角色主體輪廓，將超出分割線的武器、肢體或文字自動縮小並置中！
+          </span>
+        </div>
       </section>
 
       <!-- LINE Specification Rules Checklist -->
@@ -370,9 +387,14 @@
           <div class="text-slate-400 text-[11px] font-medium" id="statsText">
             共 <span id="summaryCount">20</span> 張貼圖 (Main: <span id="summaryMain">#1</span>, Tab: <span id="summaryTab">#1</span>)
           </div>
-          <button id="reprocessBtn" class="text-[10px] text-slate-300 hover:text-white bg-[#192336] hover:bg-[#25334c] border border-[#2b3952] px-2 py-0.5 rounded transition flex items-center gap-1 shadow-sm">
-            <i class="fa-solid fa-rotate"></i> 重新切圖
-          </button>
+          <div class="flex items-center gap-1.5">
+            <button id="galleryAutoAlignBtn" class="text-[10px] text-amber-300 hover:text-slate-950 bg-amber-500/15 hover:bg-amber-400 border border-amber-500/40 px-2 py-0.5 rounded transition flex items-center gap-1 shadow-sm font-bold" title="自動將所有貼圖偵測縮放以防超出分割線">
+              <i class="fa-solid fa-wand-magic-sparkles text-[8px]"></i> 自動防超線
+            </button>
+            <button id="reprocessBtn" class="text-[10px] text-slate-300 hover:text-white bg-[#192336] hover:bg-[#25334c] border border-[#2b3952] px-2 py-0.5 rounded transition flex items-center gap-1 shadow-sm">
+              <i class="fa-solid fa-rotate"></i> 重新切圖
+            </button>
+          </div>
         </div>
 
         <!-- Dynamic Sticker Cards 2-Column Grid -->
@@ -470,39 +492,96 @@
           </div>
           <!-- Pre-slice alignment controls: shown BEFORE final slicing -->
           <div id="preSliceControls" class="w-[300px] mt-2 p-2.5 rounded-xl bg-[#101827] border border-indigo-500/25 hidden space-y-2">
-            <div class="flex items-center justify-between">
-              <div class="text-[10px] font-bold text-indigo-300 flex items-center gap-1.5">
-                <i class="fa-solid fa-crop-simple"></i> 分割前取樣框對位
+            <div class="flex items-center justify-between gap-1">
+              <div class="text-[10px] font-bold text-indigo-300 flex items-center gap-1">
+                <i class="fa-solid fa-crop-simple"></i> 分割前對位與縮放
               </div>
-              <button id="resetSliceOffsetBtn" class="text-[9px] text-slate-400 hover:text-white"><i class="fa-solid fa-rotate-left"></i> 重設</button>
+              <div class="flex items-center gap-1">
+                <button type="button" id="btnAutoAlignSingle" class="px-2 py-0.5 rounded text-[9px] font-bold bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 transition flex items-center gap-1 shadow-sm">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> 智慧防超線對齊
+                </button>
+                <button type="button" id="resetSliceOffsetBtn" class="text-[9px] text-slate-400 hover:text-white px-1.5 py-0.5"><i class="fa-solid fa-rotate-left"></i> 重設</button>
+              </div>
             </div>
-            <div>
-              <div class="flex justify-between text-[9px] mb-0.5"><span class="text-slate-400">水平 Source X</span><span id="sliceOffsetXVal" class="font-mono text-indigo-300">0px</span></div>
-              <input type="range" id="sliceOffsetXSlider" value="0" class="w-full accent-indigo-500 h-1.5">
+
+            <!-- 水平與垂直位移 -->
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <div class="flex justify-between text-[9px] mb-0.5"><span class="text-slate-400">水平 Source X</span><span id="sliceOffsetXVal" class="font-mono text-indigo-300">0px</span></div>
+                <input type="range" id="sliceOffsetXSlider" value="0" class="w-full accent-indigo-500 h-1.5">
+              </div>
+              <div>
+                <div class="flex justify-between text-[9px] mb-0.5"><span class="text-slate-400">垂直 Source Y</span><span id="sliceOffsetYVal" class="font-mono text-indigo-300">0px</span></div>
+                <input type="range" id="sliceOffsetYSlider" value="0" class="w-full accent-indigo-500 h-1.5">
+              </div>
             </div>
-            <div>
-              <div class="flex justify-between text-[9px] mb-0.5"><span class="text-slate-400">垂直 Source Y</span><span id="sliceOffsetYVal" class="font-mono text-indigo-300">0px</span></div>
-              <input type="range" id="sliceOffsetYSlider" value="0" class="w-full accent-indigo-500 h-1.5">
+
+            <!-- 貼圖獨立縮放 (Scale) -->
+            <div class="pt-1.5 border-t border-slate-700/50 space-y-1">
+              <div class="flex justify-between items-center text-[9px]">
+                <span class="text-slate-300 font-bold flex items-center gap-1">
+                  <i class="fa-solid fa-up-right-and-down-left-from-center text-amber-400"></i> 貼圖獨立縮放 (Scale)
+                </span>
+                <div class="flex items-center gap-1.5">
+                  <span id="sliceScaleVal" class="font-mono text-amber-300 font-black bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-500/30">100%</span>
+                  <span class="text-[8px] text-slate-400">可滑鼠滾輪縮放</span>
+                </div>
+              </div>
+              <input type="range" id="sliceScaleSlider" min="40" max="160" step="1" value="100" class="w-full accent-amber-500 h-1.5 bg-[#222e42] rounded-lg cursor-pointer">
+              
+              <!-- 快速縮放按鈕 -->
+              <div class="flex items-center justify-between gap-1 pt-0.5">
+                <button type="button" id="btnScaleMinus5" class="flex-1 py-0.5 text-[8px] font-semibold bg-[#162032] hover:bg-[#223049] text-slate-300 rounded border border-[#2b3a52] transition flex items-center justify-center gap-0.5">
+                  <i class="fa-solid fa-minus text-[7px]"></i> 5%
+                </button>
+                <button type="button" class="btn-quick-scale px-1.5 py-0.5 text-[8px] font-semibold bg-[#162032] hover:bg-[#223049] text-slate-300 rounded border border-[#2b3a52] transition" data-scale="70">70%</button>
+                <button type="button" class="btn-quick-scale px-1.5 py-0.5 text-[8px] font-semibold bg-[#162032] hover:bg-[#223049] text-slate-300 rounded border border-[#2b3a52] transition" data-scale="80">80%</button>
+                <button type="button" class="btn-quick-scale px-1.5 py-0.5 text-[8px] font-semibold bg-[#162032] hover:bg-[#223049] text-slate-300 rounded border border-[#2b3a52] transition" data-scale="90">90%</button>
+                <button type="button" class="btn-quick-scale px-1.5 py-0.5 text-[8px] font-bold bg-[#1d273a] hover:bg-[#25324c] text-amber-400 rounded border border-amber-500/40 transition" data-scale="100">100%</button>
+                <button type="button" id="btnScalePlus5" class="flex-1 py-0.5 text-[8px] font-semibold bg-[#162032] hover:bg-[#223049] text-slate-300 rounded border border-[#2b3a52] transition flex items-center justify-center gap-0.5">
+                  <i class="fa-solid fa-plus text-[7px]"></i> 5%
+                </button>
+              </div>
             </div>
-            <div class="text-[9px] text-slate-500 leading-relaxed">可直接拖曳上方預覽中的貼圖，把完整角色移進這一格。這裡調整的是「分割前來源範圍」，不是切完後才移動成品。</div>
+
+            <div class="text-[9px] text-amber-300/90 bg-amber-950/30 p-1.5 rounded-lg border border-amber-500/20 leading-relaxed">
+              <i class="fa-solid fa-circle-info text-amber-400"></i> <strong>縮小防切</strong>：若貼圖超過格線被切到，向左滑動【縮小】；取樣框會自動擴大把超過分割線的文字與角色完整納入！
+            </div>
           </div>
 
-          <div id="eraserToolbar" class="flex items-center justify-between w-[300px] mt-2 text-xs">
-            <div class="flex items-center space-x-2">
-              <div class="flex bg-[#0f1726] rounded-lg p-0.5 border border-[#28374d]">
-                <button id="modalToolEraser" class="px-2 py-0.5 rounded text-[9px] font-bold bg-indigo-600 text-white transition flex items-center gap-1">
-                  <i class="fa-solid fa-eraser"></i> 橡皮擦
+          <div id="eraserToolbar" class="flex flex-col w-[300px] mt-2 space-y-1.5 text-xs">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <div class="flex bg-[#0f1726] rounded-lg p-0.5 border border-[#28374d]">
+                  <button id="modalToolEraser" class="px-2 py-0.5 rounded text-[9px] font-bold bg-indigo-600 text-white transition flex items-center gap-1">
+                    <i class="fa-solid fa-eraser"></i> 橡皮擦
+                  </button>
+                  <button id="modalToolRestore" class="px-2 py-0.5 rounded text-[9px] font-semibold text-slate-400 hover:text-white transition flex items-center gap-1">
+                    <i class="fa-solid fa-paintbrush"></i> 還原筆刷
+                  </button>
+                </div>
+                <input type="range" id="brushSizeSlider" min="2" max="35" value="10" class="w-16 accent-indigo-500">
+                <span id="brushSizeVal" class="text-indigo-400 font-mono text-[10px]">10px</span>
+              </div>
+              <button id="modalResetBtn" class="text-slate-400 hover:text-slate-200 text-[10px]">
+                <i class="fa-solid fa-rotate-left"></i> 還原整張
+              </button>
+            </div>
+            <!-- 切圖後成品縮放微調工具 -->
+            <div class="flex items-center justify-between bg-[#101827] px-2 py-1 rounded-lg border border-[#222e42] text-[9px]">
+              <span class="text-slate-400 font-medium">成品尺寸微調:</span>
+              <div class="flex gap-1">
+                <button type="button" id="btnEraserScaleDown" class="px-2 py-0.5 bg-[#192336] hover:bg-[#25324c] text-slate-200 rounded border border-[#2b3952] transition flex items-center gap-1">
+                  <i class="fa-solid fa-magnifying-glass-minus text-[8px] text-amber-400"></i> 縮小 5%
                 </button>
-                <button id="modalToolRestore" class="px-2 py-0.5 rounded text-[9px] font-semibold text-slate-400 hover:text-white transition flex items-center gap-1">
-                  <i class="fa-solid fa-paintbrush"></i> 還原筆刷
+                <button type="button" id="btnEraserScaleUp" class="px-2 py-0.5 bg-[#192336] hover:bg-[#25324c] text-slate-200 rounded border border-[#2b3952] transition flex items-center gap-1">
+                  <i class="fa-solid fa-magnifying-glass-plus text-[8px] text-indigo-400"></i> 放大 5%
+                </button>
+                <button type="button" id="btnEraserCenter" class="px-2 py-0.5 bg-[#192336] hover:bg-[#25324c] text-slate-300 rounded border border-[#2b3952] transition">
+                  自動居中
                 </button>
               </div>
-              <input type="range" id="brushSizeSlider" min="2" max="35" value="10" class="w-16 accent-indigo-500">
-              <span id="brushSizeVal" class="text-indigo-400 font-mono text-[10px]">10px</span>
             </div>
-            <button id="modalResetBtn" class="text-slate-400 hover:text-slate-200 text-[10px]">
-              <i class="fa-solid fa-rotate-left"></i> 還原整張
-            </button>
           </div>
         </div>
 
@@ -673,6 +752,16 @@
     const sliceOffsetXVal = document.getElementById('sliceOffsetXVal');
     const sliceOffsetYVal = document.getElementById('sliceOffsetYVal');
     const resetSliceOffsetBtn = document.getElementById('resetSliceOffsetBtn');
+    const sliceScaleSlider = document.getElementById('sliceScaleSlider');
+    const sliceScaleVal = document.getElementById('sliceScaleVal');
+    const btnScaleMinus5 = document.getElementById('btnScaleMinus5');
+    const btnScalePlus5 = document.getElementById('btnScalePlus5');
+    const btnEraserScaleDown = document.getElementById('btnEraserScaleDown');
+    const btnEraserScaleUp = document.getElementById('btnEraserScaleUp');
+    const btnEraserCenter = document.getElementById('btnEraserCenter');
+    const btnAutoAlignSingle = document.getElementById('btnAutoAlignSingle');
+    const btnAutoAlignAll = document.getElementById('btnAutoAlignAll');
+    const galleryAutoAlignBtn = document.getElementById('galleryAutoAlignBtn');
 
     function showToast(msg) {
       const toast = document.getElementById('toast');
@@ -885,7 +974,6 @@
           data[i * 4 + 3] = 0;
         }
       }
-
       // Step 4: Alpha Erosion (Trim 1-3px from outer edge only)
       if (erosion > 0) {
         const alphaCopy = new Uint8Array(totalPixels);
@@ -936,13 +1024,264 @@
     }
 
     /**
-     * Ensure every grid cell has its own PRE-SLICE source offset.
-     * These offsets move the sampling rectangle on the master sheet BEFORE cropping.
+     * Ensure every grid cell has its own PRE-SLICE source offset and scale.
+     * These offsets move and scale the sampling rectangle on the master sheet BEFORE cropping.
      */
     function ensureCellAdjustments(reset = false) {
       const count = state.cols * state.rows;
-      if (reset || state.cellAdjustments.length !== count) {
-        state.cellAdjustments = Array.from({ length: count }, () => ({ x: 0, y: 0 }));
+      if (reset || !state.cellAdjustments || state.cellAdjustments.length !== count) {
+        state.cellAdjustments = Array.from({ length: count }, () => ({ x: 0, y: 0, scale: 1.0, isManual: false }));
+      } else {
+        state.cellAdjustments.forEach(adj => {
+          if (typeof adj.scale !== 'number' || adj.scale <= 0) adj.scale = 1.0;
+        });
+      }
+    }
+
+    /**
+     * 核心演算法：全圖智慧連通島嶼防超線分析引擎 (Smart Island Segmentation Engine)
+     * 1. 遍歷去背後的 processedCanvas，使用 8-連通分量 (Connected Components) 標記全圖所有不透明像素集合（人物、超線武器、標題文字框、道具）。
+     * 2. 依據多數原則將每一個島嶼精確歸屬於所屬單元格 (Cell 0 ~ totalCells-1)。
+     * 3. 取得每個格子 100% 完整無截斷的外接邊界 (artBox)，自動計算視窗位移 (Offset) 與防超線縮放比例 (Scale)。
+     * 4. 產生全圖像素歸屬遮罩 (state.ownerMap)，確保超線武器 (如死神大鐮刀、長剪刀、大檯燈) 完整收納，且 0% 侵入鄰近格子！
+     */
+    function analyzeAndAutoAlignAllCells(processedCanvas, cols, rows, resetManual = false) {
+      if (!processedCanvas) return false;
+      const fullW = processedCanvas.width;
+      const fullH = processedCanvas.height;
+      const cellW = fullW / cols;
+      const cellH = fullH / rows;
+      const totalCells = cols * rows;
+
+      const pCtx = processedCanvas.getContext('2d', { willReadFrequently: true });
+      const imgData = pCtx.getImageData(0, 0, fullW, fullH);
+      const data = imgData.data;
+
+      // 1. 建立全圖 8-連通島嶼標記
+      const visited = new Uint8Array(fullW * fullH);
+      const ownerMap = new Int16Array(fullW * fullH);
+      ownerMap.fill(-1);
+
+      const queue = new Int32Array(fullW * fullH);
+      const components = [];
+
+      for (let y = 0; y < fullH; y++) {
+        const rowOffset = y * fullW;
+        for (let x = 0; x < fullW; x++) {
+          const idx = rowOffset + x;
+          if (data[idx * 4 + 3] > 20 && visited[idx] === 0) {
+            let head = 0, tail = 0;
+            visited[idx] = 1;
+            queue[tail++] = idx;
+
+            let minX = x, maxX = x, minY = y, maxY = y;
+            const cellPixelCounts = new Int32Array(totalCells);
+
+            while (head < tail) {
+              const curr = queue[head++];
+              const cx = curr % fullW;
+              const cy = (curr / fullW) | 0;
+
+              const c = Math.min(cols - 1, Math.max(0, Math.floor(cx / cellW)));
+              const r = Math.min(rows - 1, Math.max(0, Math.floor(cy / cellH)));
+              cellPixelCounts[r * cols + c]++;
+
+              if (cx < minX) minX = cx;
+              if (cx > maxX) maxX = cx;
+              if (cy < minY) minY = cy;
+              if (cy > maxY) maxY = cy;
+
+              for (let dy = -1; dy <= 1; dy++) {
+                const ny = cy + dy;
+                if (ny < 0 || ny >= fullH) continue;
+                const nRow = ny * fullW;
+                for (let dx = -1; dx <= 1; dx++) {
+                  if (dx === 0 && dy === 0) continue;
+                  const nx = cx + dx;
+                  if (nx < 0 || nx >= fullW) continue;
+                  const nIdx = nRow + nx;
+                  if (visited[nIdx] === 0 && data[nIdx * 4 + 3] > 20) {
+                    visited[nIdx] = 1;
+                    queue[tail++] = nIdx;
+                  }
+                }
+              }
+            }
+
+            const pixelCount = tail;
+            if (pixelCount < 6) continue; // 過濾微小噪點
+
+            // 決定該島嶼歸屬的格子：像素數量最多者
+            let bestCell = 0;
+            let maxCount = cellPixelCounts[0];
+            for (let k = 1; k < totalCells; k++) {
+              if (cellPixelCounts[k] > maxCount) {
+                maxCount = cellPixelCounts[k];
+                bestCell = k;
+              }
+            }
+
+            // 在 ownerMap 中標記此島嶼像素的歸屬格子
+            for (let q = 0; q < tail; q++) {
+              ownerMap[queue[q]] = bestCell;
+            }
+
+            components.push({
+              owner: bestCell,
+              minX, maxX, minY, maxY,
+              pixelCount
+            });
+          }
+        }
+      }
+
+      // 2. 依單元格彙整外接邊界 (Union Bounding Box)
+      ensureCellAdjustments(resetManual);
+      const cellBoxes = new Array(totalCells).fill(null);
+
+      for (let i = 0; i < components.length; i++) {
+        const comp = components[i];
+        const k = comp.owner;
+        if (!cellBoxes[k]) {
+          cellBoxes[k] = {
+            minX: comp.minX, maxX: comp.maxX,
+            minY: comp.minY, maxY: comp.maxY,
+            pixelCount: comp.pixelCount
+          };
+        } else {
+          const b = cellBoxes[k];
+          if (comp.minX < b.minX) b.minX = comp.minX;
+          if (comp.maxX > b.maxX) b.maxX = comp.maxX;
+          if (comp.minY < b.minY) b.minY = comp.minY;
+          if (comp.maxY > b.maxY) b.maxY = comp.maxY;
+          b.pixelCount += comp.pixelCount;
+        }
+      }
+
+      // 3. 自動設定各格最佳取樣中心位移 (Offset) 與防超線縮放 (Scale)
+      const safeMargin = 12;
+      const availW = Math.max(20, cellW - safeMargin * 2);
+      const availH = Math.max(20, cellH - safeMargin * 2);
+
+      for (let k = 0; k < totalCells; k++) {
+        // 若使用者曾手動微調且未要求重置，保留使用者設定
+        if (!resetManual && state.cellAdjustments[k] && state.cellAdjustments[k].isManual) {
+          continue;
+        }
+
+        const b = cellBoxes[k];
+        const c = k % cols;
+        const r = Math.floor(k / cols);
+        const cellCenterX = (c + 0.5) * cellW;
+        const cellCenterY = (r + 0.5) * cellH;
+
+        if (b && b.pixelCount > 15) {
+          const artW = b.maxX - b.minX + 1;
+          const artH = b.maxY - b.minY + 1;
+          const artCenterX = (b.minX + b.maxX) / 2;
+          const artCenterY = (b.minY + b.maxY) / 2;
+
+          // 取樣中心位移
+          const maxOffX = Math.round(cellW * 0.48);
+          const maxOffY = Math.round(cellH * 0.48);
+          const rawOffX = Math.round(artCenterX - cellCenterX);
+          const rawOffY = Math.round(artCenterY - cellCenterY);
+          const offX = Math.max(-maxOffX, Math.min(maxOffX, rawOffX));
+          const offY = Math.max(-maxOffY, Math.min(maxOffY, rawOffY));
+
+          // 防超線黃金縮放比：確保主體包含超線部分皆能以適當大小呈現且不頂破格線
+          let scale = 1.0;
+          if (artW > availW || artH > availH) {
+            scale = Math.min(availW / artW, availH / artH);
+            scale = Math.max(0.4, Math.min(1.0, scale));
+          }
+
+          state.cellAdjustments[k] = {
+            x: offX,
+            y: offY,
+            scale: Math.round(scale * 100) / 100,
+            isManual: false
+          };
+          b.artW = artW;
+          b.artH = artH;
+        } else {
+          state.cellAdjustments[k] = { x: 0, y: 0, scale: 1.0, isManual: false };
+        }
+      }
+
+      state.ownerMap = ownerMap;
+      state.cellBoxes = cellBoxes;
+      return true;
+    }
+
+    /**
+     * 單格自動防超線對齊
+     */
+    function autoAlignCell(index) {
+      if (!state.processedCanvas) return false;
+      if (!state.cellBoxes || !state.ownerMap) {
+        analyzeAndAutoAlignAllCells(state.processedCanvas, state.cols, state.rows, true);
+        return true;
+      }
+
+      const cols = state.cols;
+      const rows = state.rows;
+      const cellW = state.processedCanvas.width / cols;
+      const cellH = state.processedCanvas.height / rows;
+      const b = state.cellBoxes[index];
+      const c = index % cols;
+      const r = Math.floor(index / cols);
+      const cellCenterX = (c + 0.5) * cellW;
+      const cellCenterY = (r + 0.5) * cellH;
+
+      if (b && b.pixelCount > 15) {
+        const artW = b.maxX - b.minX + 1;
+        const artH = b.maxY - b.minY + 1;
+        const artCenterX = (b.minX + b.maxX) / 2;
+        const artCenterY = (b.minY + b.maxY) / 2;
+
+        const maxOffX = Math.round(cellW * 0.48);
+        const maxOffY = Math.round(cellH * 0.48);
+        const offX = Math.max(-maxOffX, Math.min(maxOffX, Math.round(artCenterX - cellCenterX)));
+        const offY = Math.max(-maxOffY, Math.min(maxOffY, Math.round(artCenterY - cellCenterY)));
+
+        const safeMargin = 12;
+        const availW = Math.max(20, cellW - safeMargin * 2);
+        const availH = Math.max(20, cellH - safeMargin * 2);
+        let scale = 1.0;
+        if (artW > availW || artH > availH) {
+          scale = Math.min(availW / artW, availH / artH);
+          scale = Math.max(0.4, Math.min(1.0, scale));
+        }
+
+        state.cellAdjustments[index] = {
+          x: offX,
+          y: offY,
+          scale: Math.round(scale * 100) / 100,
+          isManual: false
+        };
+        return true;
+      }
+      return false;
+    }
+
+    /**
+     * 批次對齊全圖所有貼圖（強制重設手動設定）
+     */
+    function autoAlignAllCells(options = { showToastNotice: true }) {
+      if (!state.image || !state.processedCanvas) {
+        showToast('請先載入圖片');
+        return;
+      }
+      analyzeAndAutoAlignAllCells(state.processedCanvas, state.cols, state.rows, true);
+
+      const padding = parseInt(paddingSlider.value) || 10;
+      state.stickers = sliceIntoLineStickers(state.processedCanvas, state.cols, state.rows, padding);
+      renderStickerGallery();
+      renderGridOverlay(state.cols, state.rows, state.processedCanvas.width, state.processedCanvas.height);
+
+      if (options.showToastNotice) {
+        showToast(`✨ 全圖防超線自動對齊完成！已智慧調校 ${state.cols * state.rows} 格貼圖`);
       }
     }
 
@@ -953,41 +1292,34 @@
       const cellH = fullH / state.rows;
       const c = index % state.cols;
       const r = Math.floor(index / state.cols);
-      const adj = state.cellAdjustments[index] || { x: 0, y: 0 };
-      const sampleW = Math.min(fullW, Math.ceil(cellW));
-      const sampleH = Math.min(fullH, Math.ceil(cellH));
-      const maxX = Math.max(0, fullW - sampleW);
-      const maxY = Math.max(0, fullH - sampleH);
-      const x = Math.max(0, Math.min(maxX, Math.round(c * cellW + adj.x)));
-      const y = Math.max(0, Math.min(maxY, Math.round(r * cellH + adj.y)));
-      return { x, y, w: sampleW, h: sampleH, cellW, cellH, c, r };
+      const adj = state.cellAdjustments[index] || { x: 0, y: 0, scale: 1.0 };
+      const scale = (typeof adj.scale === 'number' && adj.scale > 0) ? adj.scale : 1.0;
+
+      // 核心縮放視野：
+      // 當 scale < 1.0 (縮小貼圖)，取樣框向外擴大 (cellW / scale)，把格線外超出分割線的文字/圖形完整抓進來！
+      // 當 scale > 1.0 (放大貼圖)，取樣框縮小 (cellW / scale)
+      const sampleW = Math.min(fullW, Math.max(10, Math.round(cellW / scale)));
+      const sampleH = Math.min(fullH, Math.max(10, Math.round(cellH / scale)));
+
+      const centerX = (c + 0.5) * cellW + (adj.x || 0);
+      const centerY = (r + 0.5) * cellH + (adj.y || 0);
+
+      let x = Math.round(centerX - sampleW / 2);
+      let y = Math.round(centerY - sampleH / 2);
+
+      x = Math.max(0, Math.min(fullW - sampleW, x));
+      y = Math.max(0, Math.min(fullH - sampleH, y));
+
+      return { x, y, w: sampleW, h: sampleH, cellW, cellH, c, r, scale };
     }
 
     /**
-     * Produce ONE 370×320 sticker from the CURRENT pre-slice sampling rectangle.
-     * This is used both for preview and final slicing.
+     * 裁切單張 LINE 貼圖 (標準 370×320)：
+     * 1. 若未經手動微調：直接套用島嶼連通分析結果與 ownerMap 像素遮罩，
+     *    100% 完整保留超線武器 (死神鐮刀、剪刀) 與邊緣文字，且 0% 侵入相鄰格子！
+     * 2. 若使用者有手動微調 (adj.isManual === true)：使用使用者調整的取樣框裁切。
      */
-    function sliceSingleSticker(processedCanvas, index, padding) {
-      const rect = getCellSourceRect(index, processedCanvas);
-      const pCtx = processedCanvas.getContext('2d', { willReadFrequently: true });
-      const cellData = pCtx.getImageData(rect.x, rect.y, rect.w, rect.h);
-      const cData = cellData.data;
-
-      let minX = rect.w, minY = rect.h, maxX = 0, maxY = 0;
-      let hasContent = false;
-      for (let py = 0; py < rect.h; py++) {
-        for (let px = 0; px < rect.w; px++) {
-          const alpha = cData[(py * rect.w + px) * 4 + 3];
-          if (alpha > 15) {
-            hasContent = true;
-            if (px < minX) minX = px;
-            if (px > maxX) maxX = px;
-            if (py < minY) minY = py;
-            if (py > maxY) maxY = py;
-          }
-        }
-      }
-
+    function sliceSingleSticker(processedCanvas, index, padding = 10) {
       const targetW = 370, targetH = 320;
       const outCanvas = document.createElement('canvas');
       outCanvas.width = targetW; outCanvas.height = targetH;
@@ -995,19 +1327,91 @@
       outCtx.imageSmoothingEnabled = true;
       outCtx.imageSmoothingQuality = 'high';
 
-      if (hasContent) {
-        const cropW = Math.max(1, maxX - minX + 1);
-        const cropH = Math.max(1, maxY - minY + 1);
+      const fullW = processedCanvas.width;
+      const fullH = processedCanvas.height;
+      const adj = state.cellAdjustments[index] || { x: 0, y: 0, scale: 1.0 };
+      const isManual = !!adj.isManual;
+      const box = (state.cellBoxes && !isManual) ? state.cellBoxes[index] : null;
+      const ownerMap = state.ownerMap;
+
+      if (!isManual && box && box.pixelCount > 15 && ownerMap) {
+        // 使用智慧島嶼連通提取
+        const cropW = box.maxX - box.minX + 1;
+        const cropH = box.maxY - box.minY + 1;
+
+        const pCtx = processedCanvas.getContext('2d', { willReadFrequently: true });
+        const patchData = pCtx.getImageData(box.minX, box.minY, cropW, cropH);
+        const pData = patchData.data;
+
+        // 使用 ownerMap 遮罩過濾：僅保留屬於本格的像素，鄰格像素設為透明
+        for (let py = 0; py < cropH; py++) {
+          const globalY = box.minY + py;
+          const rowOffset = globalY * fullW;
+          for (let px = 0; px < cropW; px++) {
+            const globalX = box.minX + px;
+            const oIdx = rowOffset + globalX;
+            const pIdx = (py * cropW + px) * 4;
+            if (ownerMap[oIdx] !== index) {
+              pData[pIdx + 3] = 0;
+            }
+          }
+        }
+
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = cropW;
+        tempCanvas.height = cropH;
+        tempCanvas.getContext('2d').putImageData(patchData, 0, 0);
+
         const availW = targetW - padding * 2;
         const availH = targetH - padding * 2;
-        const scale = Math.min(availW / cropW, availH / cropH, 1.0);
-        const drawW = Math.round(cropW * scale);
-        const drawH = Math.round(cropH * scale);
+        const fitScale = Math.min(availW / cropW, availH / cropH, 1.0);
+        const drawW = Math.round(cropW * fitScale);
+        const drawH = Math.round(cropH * fitScale);
         const drawX = Math.round((targetW - drawW) / 2);
         const drawY = Math.round((targetH - drawH) / 2);
-        outCtx.drawImage(processedCanvas,
-          rect.x + minX, rect.y + minY, cropW, cropH,
-          drawX, drawY, drawW, drawH);
+
+        outCtx.drawImage(tempCanvas, 0, 0, cropW, cropH, drawX, drawY, drawW, drawH);
+      } else {
+        // 手動調整模式或備援取樣
+        const rect = getCellSourceRect(index, processedCanvas);
+        const pCtx = processedCanvas.getContext('2d', { willReadFrequently: true });
+        const cellData = pCtx.getImageData(rect.x, rect.y, rect.w, rect.h);
+        const cData = cellData.data;
+
+        let minX = rect.w, minY = rect.h, maxX = 0, maxY = 0;
+        let hasContent = false;
+        for (let py = 0; py < rect.h; py++) {
+          for (let px = 0; px < rect.w; px++) {
+            const alpha = cData[(py * rect.w + px) * 4 + 3];
+            if (alpha > 15) {
+              hasContent = true;
+              if (px < minX) minX = px;
+              if (px > maxX) maxX = px;
+              if (py < minY) minY = py;
+              if (py > maxY) maxY = py;
+            }
+          }
+        }
+
+        if (hasContent) {
+          const cropW = Math.max(1, maxX - minX + 1);
+          const cropH = Math.max(1, maxY - minY + 1);
+          const baseAvailW = targetW - padding * 2;
+          const baseAvailH = targetH - padding * 2;
+
+          const contentScaleFactor = rect.scale < 1.0 ? Math.max(0.4, rect.scale) : 1.0;
+          const availW = Math.max(20, Math.round(baseAvailW * contentScaleFactor));
+          const availH = Math.max(20, Math.round(baseAvailH * contentScaleFactor));
+
+          const fitScale = Math.min(availW / cropW, availH / cropH, 1.0);
+          const drawW = Math.round(cropW * fitScale);
+          const drawH = Math.round(cropH * fitScale);
+          const drawX = Math.round((targetW - drawW) / 2);
+          const drawY = Math.round((targetH - drawH) / 2);
+          outCtx.drawImage(processedCanvas,
+            rect.x + minX, rect.y + minY, cropW, cropH,
+            drawX, drawY, drawW, drawH);
+        }
       }
 
       const originalCopy = document.createElement('canvas');
@@ -1021,13 +1425,14 @@
         dataUrl: outCanvas.toDataURL('image/png'),
         main: index === state.mainIndex,
         tab: index === state.tabIndex,
-        sourceOffsetX: (state.cellAdjustments[index] || {x:0}).x || 0,
-        sourceOffsetY: (state.cellAdjustments[index] || {y:0}).y || 0
+        sourceOffsetX: adj.x || 0,
+        sourceOffsetY: adj.y || 0,
+        scale: adj.scale || 1.0
       };
     }
 
     /**
-     * Build preview/final sticker array using PRE-SLICE per-cell source offsets.
+     * Build preview/final sticker array using PRE-SLICE per-cell source offsets and scale.
      */
     function sliceIntoLineStickers(processedCanvas, cols, rows, padding) {
       ensureCellAdjustments(false);
@@ -1038,12 +1443,6 @@
       return stickers;
     }
 
-    /**
-     * Renders sticker list matching user screenshot layout:
-     * - Top badges: Main 封面 (green) / Tab 標籤 (cyan)
-     * - Middle: filename (01.png) + 微調橡皮擦 button
-     * - Bottom: ★ Main + 🏷 Tab
-     */
     function renderStickerGallery() {
       stickersGrid.innerHTML = '';
       simKeyboardGrid.innerHTML = '';
@@ -1059,6 +1458,8 @@
       state.stickers.forEach((sticker, i) => {
         const fileNum = String(startNum + i).padStart(2, '0');
         const fileName = `${fileNum}.png`;
+        const scalePct = Math.round((sticker.scale || 1.0) * 100);
+        const isCustomScale = scalePct !== 100;
 
         const card = document.createElement('div');
         card.className = `p-2 rounded-xl bg-[#141b2a] border transition ${
@@ -1074,21 +1475,30 @@
           badgesHtml += '</div>';
         }
 
+        // Scale indicator badge on top-right if customized
+        let scaleBadgeHtml = '';
+        if (isCustomScale) {
+          scaleBadgeHtml = `<div class="absolute top-2.5 right-2.5 z-10"><span class="text-[8px] font-mono font-bold px-1.5 py-0.5 rounded shadow ${scalePct < 100 ? 'bg-amber-500 text-slate-950 font-black' : 'bg-indigo-600 text-white'}">${scalePct}%</span></div>`;
+        }
+
         card.innerHTML = `
           ${badgesHtml}
+          ${scaleBadgeHtml}
           <!-- Thumbnail -->
           <div class="w-full aspect-[370/320] rounded-lg bg-checker overflow-hidden cursor-pointer relative group flex items-center justify-center border border-[#1f2b3e]">
             <img src="${sticker.dataUrl}" class="w-full h-full object-contain p-1" alt="${fileName}">
             <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-              <span class="text-[9px] bg-white text-slate-900 px-2 py-0.5 rounded font-bold shadow">${state.slicingFinalized ? '點擊修容' : '點擊切割對位'}</span>
+              <span class="text-[9px] bg-white text-slate-900 px-2 py-0.5 rounded font-bold shadow">${state.slicingFinalized ? '點擊修容' : '點擊對位與縮放'}</span>
             </div>
           </div>
 
-          <!-- Middle Row: Filename & 微調橡皮擦 -->
-          <div class="w-full flex items-center justify-between mt-1.5 px-0.5">
-            <span class="text-[10px] font-mono font-bold text-slate-300">${fileName}</span>
-            <button class="open-eraser-btn text-[9px] text-indigo-300 hover:text-white bg-[#1d273a] hover:bg-[#2a3854] border border-[#2c3b54] px-1.5 py-0.5 rounded transition flex items-center gap-1" data-index="${i}">
-              <i class="fa-solid ${state.slicingFinalized ? 'fa-eraser' : 'fa-crop-simple'} text-[8px]"></i> ${state.slicingFinalized ? '微調橡皮擦' : '切割前對位'}
+          <!-- Middle Row: Filename & 微調/對位 button -->
+          <div class="w-full flex items-center justify-between mt-1.5 px-0.5 gap-1">
+            <div class="flex items-center gap-1 min-w-0">
+              <span class="text-[10px] font-mono font-bold text-slate-300 truncate">${fileName}</span>
+            </div>
+            <button class="open-eraser-btn text-[9px] text-indigo-300 hover:text-white bg-[#1d273a] hover:bg-[#2a3854] border border-[#2c3b54] px-1.5 py-0.5 rounded transition flex items-center gap-1 flex-shrink-0" data-index="${i}">
+              <i class="fa-solid ${state.slicingFinalized ? 'fa-eraser' : 'fa-up-right-and-down-left-from-center'} text-[8px]"></i> ${state.slicingFinalized ? '微調橡皮擦' : '對位與縮放'}
             </button>
           </div>
 
@@ -1208,12 +1618,14 @@
         gridSvg.appendChild(line);
       }
 
-      // Clickable PRE-SLICE sampling rectangles. Amber = user shifted this cell.
+      // Clickable PRE-SLICE sampling rectangles. Amber = user shifted or scaled this cell.
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
           const index = r * cols + c;
           const rectInfo = getCellSourceRect(index, state.processedCanvas);
-          const adj = state.cellAdjustments[index] || {x:0,y:0};
+          const adj = state.cellAdjustments[index] || { x: 0, y: 0, scale: 1.0 };
+          const scalePct = Math.round((adj.scale || 1.0) * 100);
+          const isModified = (adj.x !== 0 || adj.y !== 0 || scalePct !== 100);
 
           const hit = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
           hit.setAttribute('x', rectInfo.x);
@@ -1221,8 +1633,8 @@
           hit.setAttribute('width', rectInfo.w);
           hit.setAttribute('height', rectInfo.h);
           hit.setAttribute('fill', 'rgba(99,102,241,0.001)');
-          hit.setAttribute('stroke', (adj.x || adj.y) ? '#f59e0b' : 'rgba(99,102,241,0.22)');
-          hit.setAttribute('stroke-width', (adj.x || adj.y) ? '4' : '1');
+          hit.setAttribute('stroke', isModified ? '#f59e0b' : 'rgba(99,102,241,0.22)');
+          hit.setAttribute('stroke-width', isModified ? '3' : '1');
           hit.style.pointerEvents = 'all';
           hit.style.cursor = 'pointer';
           hit.addEventListener('click', (e) => {
@@ -1234,12 +1646,12 @@
           const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
           text.setAttribute('x', rectInfo.x + 12);
           text.setAttribute('y', rectInfo.y + 24);
-          text.setAttribute('fill', (adj.x || adj.y) ? '#fbbf24' : 'rgba(255,255,255,0.65)');
+          text.setAttribute('fill', isModified ? '#fbbf24' : 'rgba(255,255,255,0.65)');
           text.setAttribute('font-size', '16');
           text.setAttribute('font-weight', 'bold');
           text.setAttribute('font-family', 'monospace');
           text.setAttribute('pointer-events', 'none');
-          text.textContent = `#${index + 1}${(adj.x || adj.y) ? ' ✥' : ''}`;
+          text.textContent = isModified ? `#${index + 1} (${scalePct}%) ✥` : `#${index + 1}`;
           gridSvg.appendChild(text);
         }
       }
@@ -1305,6 +1717,9 @@
         state.processedCanvas = processChromaKey(state.image, keyColor, tolerance, cleanHoles, despill, erosion);
         ensureCellAdjustments(resetAdjustments);
 
+        // 導入新圖、切換網格或調整去背時：全自動智慧連通島嶼防超線對齊，零操作即可防止任何圖案被分割線裁切
+        analyzeAndAutoAlignAllCells(state.processedCanvas, cols, rows, resetAdjustments);
+
         mainCanvas.width = state.processedCanvas.width;
         mainCanvas.height = state.processedCanvas.height;
         const ctx = mainCanvas.getContext('2d');
@@ -1316,7 +1731,7 @@
         const oCtx = originalCanvas.getContext('2d');
         oCtx.drawImage(state.image, 0, 0);
 
-        // IMPORTANT: these are PREVIEW slices only. User can shift each sampling rectangle first.
+        // 使用已自動防超線對齊與遮罩隔離的點陣資料生成貼圖
         state.stickers = sliceIntoLineStickers(state.processedCanvas, cols, rows, padding);
         state.slicingFinalized = false;
 
@@ -1331,13 +1746,6 @@
       }, 40);
     }
 
-    /**
-     * Generates the 20 Gecko Sticker Sheet matching user screenshot captions:
-     * 讚啦!、隨便啦、好吃!、好熱喔、放假囉、
-     * 氣死我了、想家了、想睡、真的假的?、尷尬...、
-     * 沒問題!、出發囉!、去旅行!、手搖必喝、加油啊!、
-     * 累爆了、發財啦、愛你喔、幫我看看、對不起啦
-     */
     function loadGeckoSample() {
       loadingBadge.classList.remove('hidden');
       const canvas = document.createElement('canvas');
@@ -1468,7 +1876,7 @@
         emptyState.classList.add('hidden');
         canvasWrapper.classList.remove('hidden');
         runProcessingPipeline({ resetAdjustments: true });
-        showToast('範例已載入：請先檢查網格對位，再確認切圖');
+        showToast('範例已載入：已全自動完成智慧去背與防超線對齊！');
       };
       img.src = canvas.toDataURL('image/png');
     }
@@ -1528,18 +1936,22 @@
       configureModalPhase('preslice');
 
       const fileNum = String(state.startNumber + index).padStart(2, '0');
-      modalTitle.textContent = `分割前對位 - ${fileNum}.png`;
+      modalTitle.textContent = `分割前對位與獨立縮放 - ${fileNum}.png`;
 
       const rect = getCellSourceRect(index, state.processedCanvas);
-      const adj = state.cellAdjustments[index] || { x: 0, y: 0 };
-      const maxX = Math.max(10, Math.floor(rect.cellW * 0.45));
-      const maxY = Math.max(10, Math.floor(rect.cellH * 0.45));
+      const adj = state.cellAdjustments[index] || { x: 0, y: 0, scale: 1.0 };
+      const maxX = Math.max(10, Math.floor(rect.cellW * 0.5));
+      const maxY = Math.max(10, Math.floor(rect.cellH * 0.5));
       sliceOffsetXSlider.min = -maxX; sliceOffsetXSlider.max = maxX;
       sliceOffsetYSlider.min = -maxY; sliceOffsetYSlider.max = maxY;
       sliceOffsetXSlider.value = adj.x || 0;
       sliceOffsetYSlider.value = adj.y || 0;
       sliceOffsetXVal.textContent = `${adj.x || 0}px`;
       sliceOffsetYVal.textContent = `${adj.y || 0}px`;
+
+      const currentScalePct = Math.round((adj.scale || 1.0) * 100);
+      sliceScaleSlider.value = currentScalePct;
+      sliceScaleVal.textContent = `${currentScalePct}%`;
 
       refreshPreSliceModalPreview();
       editorModal.classList.remove('hidden');
@@ -1575,25 +1987,181 @@
       if (state.editingIndex < 0) return;
       ensureCellAdjustments(false);
       state.cellAdjustments[state.editingIndex].x = parseInt(e.target.value) || 0;
+      state.cellAdjustments[state.editingIndex].isManual = true;
       sliceOffsetXVal.textContent = `${state.cellAdjustments[state.editingIndex].x}px`;
       refreshPreSliceModalPreview();
       renderGridOverlay(state.cols, state.rows, state.processedCanvas.width, state.processedCanvas.height);
     });
+
     sliceOffsetYSlider.addEventListener('input', (e) => {
       if (state.editingIndex < 0) return;
       ensureCellAdjustments(false);
       state.cellAdjustments[state.editingIndex].y = parseInt(e.target.value) || 0;
+      state.cellAdjustments[state.editingIndex].isManual = true;
       sliceOffsetYVal.textContent = `${state.cellAdjustments[state.editingIndex].y}px`;
       refreshPreSliceModalPreview();
       renderGridOverlay(state.cols, state.rows, state.processedCanvas.width, state.processedCanvas.height);
     });
-    resetSliceOffsetBtn.addEventListener('click', () => {
+
+    // 獨立縮放 Scale 滑桿監聽
+    function applySliceScale(percent) {
       if (state.editingIndex < 0) return;
-      state.cellAdjustments[state.editingIndex] = { x: 0, y: 0 };
-      sliceOffsetXSlider.value = 0; sliceOffsetYSlider.value = 0;
-      sliceOffsetXVal.textContent = '0px'; sliceOffsetYVal.textContent = '0px';
+      ensureCellAdjustments(false);
+      const clamped = Math.max(40, Math.min(160, Math.round(percent)));
+      state.cellAdjustments[state.editingIndex].scale = clamped / 100;
+      state.cellAdjustments[state.editingIndex].isManual = true;
+      sliceScaleSlider.value = clamped;
+      sliceScaleVal.textContent = `${clamped}%`;
       refreshPreSliceModalPreview();
       renderGridOverlay(state.cols, state.rows, state.processedCanvas.width, state.processedCanvas.height);
+    }
+
+    sliceScaleSlider.addEventListener('input', (e) => {
+      applySliceScale(parseInt(e.target.value) || 100);
+    });
+
+    btnScaleMinus5.addEventListener('click', () => {
+      if (state.editingIndex < 0) return;
+      const current = parseInt(sliceScaleSlider.value) || 100;
+      applySliceScale(current - 5);
+    });
+
+    btnScalePlus5.addEventListener('click', () => {
+      if (state.editingIndex < 0) return;
+      const current = parseInt(sliceScaleSlider.value) || 100;
+      applySliceScale(current + 5);
+    });
+
+    document.querySelectorAll('.btn-quick-scale').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetScale = parseInt(btn.dataset.scale) || 100;
+        applySliceScale(targetScale);
+      });
+    });
+
+    // 重設全部位移與縮放比例
+    resetSliceOffsetBtn.addEventListener('click', () => {
+      if (state.editingIndex < 0) return;
+      state.cellAdjustments[state.editingIndex] = { x: 0, y: 0, scale: 1.0, isManual: false };
+      autoAlignCell(state.editingIndex);
+      sliceOffsetXSlider.value = 0;
+      sliceOffsetYSlider.value = 0;
+      sliceOffsetXVal.textContent = '0px';
+      sliceOffsetYVal.textContent = '0px';
+      sliceScaleSlider.value = 100;
+      sliceScaleVal.textContent = '100%';
+      refreshPreSliceModalPreview();
+      renderGridOverlay(state.cols, state.rows, state.processedCanvas.width, state.processedCanvas.height);
+      showToast('已重設此格位置與縮放為預設值');
+    });
+
+    // 單格智慧自動防超線對齊
+    btnAutoAlignSingle.addEventListener('click', () => {
+      if (state.editingIndex < 0) return;
+      if (state.cellAdjustments[state.editingIndex]) state.cellAdjustments[state.editingIndex].isManual = false;
+      const success = autoAlignCell(state.editingIndex);
+      const adj = state.cellAdjustments[state.editingIndex] || { x: 0, y: 0, scale: 1.0 };
+
+      sliceOffsetXSlider.value = adj.x || 0;
+      sliceOffsetYSlider.value = adj.y || 0;
+      sliceOffsetXVal.textContent = `${adj.x || 0}px`;
+      sliceOffsetYVal.textContent = `${adj.y || 0}px`;
+
+      const scalePct = Math.round((adj.scale || 1.0) * 100);
+      sliceScaleSlider.value = scalePct;
+      sliceScaleVal.textContent = `${scalePct}%`;
+
+      refreshPreSliceModalPreview();
+      renderGridOverlay(state.cols, state.rows, state.processedCanvas.width, state.processedCanvas.height);
+
+      if (success) {
+        showToast(`✨ 第 #${state.editingIndex + 1} 格已智慧對齊！縮放為 ${scalePct}%，避免超線切邊`);
+      } else {
+        showToast(`第 #${state.editingIndex + 1} 格無明顯主體或已在最佳位置`);
+      }
+    });
+
+    // 批次全圖自動防超線對齊
+    btnAutoAlignAll.addEventListener('click', () => {
+      autoAlignAllCells({ showToastNotice: true });
+    });
+
+    galleryAutoAlignBtn.addEventListener('click', () => {
+      autoAlignAllCells({ showToastNotice: true });
+    });
+
+    // 畫布滑鼠滾輪縮放 (Wheel Zoom)
+    modalCanvas.addEventListener('wheel', (e) => {
+      if (state.modalPhase === 'preslice' && state.editingIndex >= 0) {
+        e.preventDefault();
+        const current = parseInt(sliceScaleSlider.value) || 100;
+        // 滾輪向下 e.deltaY > 0 -> 縮小 (放寬視野吃進溢出內容)；滾輪向上 -> 放大
+        const delta = e.deltaY > 0 ? -3 : 3;
+        applySliceScale(current + delta);
+      }
+    }, { passive: false });
+
+    // 切圖後成品尺寸縮放輔助函式
+    function scaleModalCanvasContent(factor) {
+      if (state.editingIndex < 0) return;
+      const w = modalCanvas.width;
+      const h = modalCanvas.height;
+      const temp = document.createElement('canvas');
+      temp.width = w;
+      temp.height = h;
+      const tCtx = temp.getContext('2d');
+      tCtx.drawImage(modalCanvas, 0, 0);
+
+      const ctx = modalCanvas.getContext('2d');
+      ctx.clearRect(0, 0, w, h);
+      const newW = Math.round(w * factor);
+      const newH = Math.round(h * factor);
+      const offX = Math.round((w - newW) / 2);
+      const offY = Math.round((h - newH) / 2);
+      ctx.drawImage(temp, offX, offY, newW, newH);
+    }
+
+    btnEraserScaleDown.addEventListener('click', () => {
+      scaleModalCanvasContent(0.95);
+      showToast('成品內容已縮小 5%');
+    });
+
+    btnEraserScaleUp.addEventListener('click', () => {
+      scaleModalCanvasContent(1.05);
+      showToast('成品內容已放大 5%');
+    });
+
+    btnEraserCenter.addEventListener('click', () => {
+      // 自動偵測當前 modalCanvas 非透明內容並重新居中
+      const ctx = modalCanvas.getContext('2d');
+      const w = modalCanvas.width;
+      const h = modalCanvas.height;
+      const imgData = ctx.getImageData(0, 0, w, h);
+      const data = imgData.data;
+      let minX = w, minY = h, maxX = 0, maxY = 0, hasPix = false;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          if (data[(y * w + x) * 4 + 3] > 10) {
+            hasPix = true;
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+      if (hasPix) {
+        const cropW = maxX - minX + 1;
+        const cropH = maxY - minY + 1;
+        const temp = document.createElement('canvas');
+        temp.width = w; temp.height = h;
+        temp.getContext('2d').drawImage(modalCanvas, 0, 0);
+        ctx.clearRect(0, 0, w, h);
+        const destX = Math.round((w - cropW) / 2);
+        const destY = Math.round((h - cropH) / 2);
+        ctx.drawImage(temp, minX, minY, cropW, cropH, destX, destY, cropW, cropH);
+        showToast('貼圖內容已自動置中');
+      }
     });
 
     // Canvas drag: in pre-slice phase, drag the STICKER CONTENT into the desired cell.
@@ -2100,7 +2668,7 @@
           keyColorDisplay.style.backgroundColor = detectedHex;
 
           runProcessingPipeline({ resetAdjustments: true });
-          showToast('圖片載入成功：已完成去背，請先逐格做「分割前對位」，再確認切圖');
+          showToast('圖片載入成功：已全自動去背並完成防超線對齊與縮放！');
         };
         img.src = e.target.result;
       };
