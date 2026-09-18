@@ -219,7 +219,7 @@
             <span class="text-[9px] text-slate-500 leading-tight block">針對肢體死角穿透背景；具備黑邊文字辨識，安全保護「揮手」「爬山中」等綠字</span>
           </div>
           <label class="relative inline-flex items-center cursor-pointer flex-shrink-0 ml-2">
-            <input type="checkbox" id="cleanHolesToggle" class="sr-only peer">
+            <input type="checkbox" id="cleanHolesToggle" class="sr-only peer" checked>
             <div class="w-8 h-4 bg-[#26354d] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-indigo-600"></div>
           </label>
         </div>
@@ -788,27 +788,43 @@
      * and guards characters/text containing green (e.g. "揮手", "爬山中", trees, props).
      */
     function isChromaGreen(r, g, b, targetRgb, tolerance) {
-      // Must have strong green dominance over red and blue
       const maxRB = Math.max(r, b);
       const greenDiff = g - maxRB;
-      if (greenDiff < 28) return false;
+      if (greenDiff < 16) return false;
 
-      // Color distance strictly weighted toward green background
+      const maxC = Math.max(r, g, b);
+      const minC = Math.min(r, g, b);
+      const d = maxC - minC;
+      if (d < 15) return false;
+      if (maxC !== g) return false;
+
+      // 計算色相角度 (Hue 0° ~ 360°)
+      let hue = ((b - r) / d + 2) * 60;
+      if (hue < 0) hue += 360;
+
+      // 真正綠幕背景的色相嚴格分佈在 93° ~ 165° 之間 (中心 120° 純綠)
+      // 偏黃的植物蔬菜/便當青菜 Hue 通常在 68° ~ 88°，徹底安全保護！
+      if (hue < 93 || hue > 165) return false;
+
+      // 色差距離
       const dr = r - targetRgb.r;
       const dg = g - targetRgb.g;
       const db = b - targetRgb.b;
-      const dist = Math.sqrt(dr * dr * 0.25 + dg * dg * 0.6 + db * db * 0.15);
+      const dist = Math.sqrt(dr * dr * 0.25 + dg * dg * 0.5 + db * db * 0.25);
 
-      return dist < tolerance * 1.5;
+      // 純正綠幕色相區間 (105° ~ 135°)，只要有顯著綠色優勢即視為綠幕背景
+      if (hue >= 105 && hue <= 135 && greenDiff >= 22) return true;
+
+      return dist < tolerance * 1.6;
     }
 
     /**
-     * Advanced Background Removal Engine with Strict Topological Protection:
-     * 1. Auto-detects corner chroma background color.
-     * 2. Outer perimeter flood fill to eliminate background without touching inner artwork.
-     * 3. Text and Object Contour Guard: Any green region enclosed by dark text strokes
-     *    (like "揮手", "爬山中") is protected from hole deletion.
-     * 4. Safe Despill only targeting white border edges.
+     * 高精度全自動綠幕去背引擎 (Advanced Chroma Key & Enclosed Void Cleansing Engine):
+     * 1. 角落自動採樣綠幕基底色。
+     * 2. 外圍 BFS 洪水填塞，穿透外圍大面積背景。
+     * 3. 智慧封閉死角清掃 (Enclosed Voids)：全自動清除被物體/白邊包圍的內部綠色空隙 (如沙漏旁、高跟鞋上、欄杆內、鞋底、耳機等)。
+     * 4. 蔬菜與文字色相保護：精確隔離保護偏黃綠蔬菜 (便當、綠植等)。
+     * 5. 邊緣泛綠溢色淨化 (Enhanced Despill)：消除白色模切邊邊緣的微弱綠色光暈。
      */
     function processChromaKey(sourceImg, targetColorHex, tolerance, shouldCleanHoles, despill, erosion) {
       const width = sourceImg.naturalWidth || sourceImg.width;
@@ -824,7 +840,7 @@
       const data = imgData.data;
       const totalPixels = width * height;
 
-      // Auto-sample true background color from image corners for precision
+      // 自動從圖片角落採樣真實綠幕基底色
       let bgR = 0, bgG = 0, bgB = 0;
       const sampleCoords = [
         [2, 2], [width - 3, 2], [2, height - 3], [width - 3, height - 3]
@@ -841,7 +857,7 @@
         b: Math.round(bgB / 4)
       };
 
-      // Status: 0 = unvisited, 1 = exterior background (transparent), 2 = protected foreground
+      // Status: 0 = 未標記, 1 = 背景(設透明), 2 = 前景保護
       const status = new Uint8Array(totalPixels);
       const queue = new Int32Array(totalPixels);
       let head = 0;
@@ -851,7 +867,7 @@
         return isChromaGreen(data[idx], data[idx + 1], data[idx + 2], targetRgb, tolerance);
       }
 
-      // Step 1: Seed outer image borders (Top, Bottom, Left, Right edges)
+      // Step 1: 從圖片四周最外邊緣進行 BFS 洪水填塞 (清除外部開放背景)
       for (let x = 0; x < width; x++) {
         const top = x;
         const btm = (height - 1) * width + x;
@@ -878,7 +894,6 @@
         }
       }
 
-      // BFS flood fill outer background - stops dead at the sticker's white outer die-cut border
       while (head < tail) {
         const curr = queue[head++];
         const cx = curr % width;
@@ -900,19 +915,18 @@
         }
       }
 
-      // Step 2: Safe Enclosed Hole Clearing with Black Stroke Protection
+      // Step 2: 內部封閉死角清除 (Enclosed Voids Cleaning)
+      // 自動辨識雙腿胯下、沙漏旁、高跟鞋上方、施工柵欄內部、鞋底、耳機等所有被包夾的綠色背景
       if (shouldCleanHoles) {
         for (let i = 0; i < totalPixels; i++) {
           if (status[i] === 0 && checkChroma(i * 4)) {
             let regionTail = 0;
-            const regionQueue = new Int32Array(80000);
+            const regionQueue = new Int32Array(150000);
             regionQueue[regionTail++] = i;
-            status[i] = 3; // temporary marked
+            status[i] = 3; // 臨時標記
 
             let rHead = 0;
-            let touchesTextStroke = false;
-            let touchesWhiteBorder = false;
-            let sumColorDiff = 0;
+            let sumGDiff = 0;
 
             while (rHead < regionTail) {
               const rCurr = regionQueue[rHead++];
@@ -920,9 +934,8 @@
               const ry = (rCurr / width) | 0;
               const pIdx = rCurr * 4;
 
-              // Calculate color diff against corner green
-              const dG = Math.abs(data[pIdx + 1] - targetRgb.g);
-              sumColorDiff += dG;
+              const r = data[pIdx], g = data[pIdx + 1], b = data[pIdx + 2];
+              sumGDiff += (g - Math.max(r, b));
 
               const rNeighbors = [
                 rx > 0 ? rCurr - 1 : -1,
@@ -933,48 +946,34 @@
 
               for (let k = 0; k < 4; k++) {
                 const rn = rNeighbors[k];
-                if (rn !== -1) {
-                  if (status[rn] === 0 && checkChroma(rn * 4)) {
-                    if (regionTail < regionQueue.length) {
-                      status[rn] = 3;
-                      regionQueue[regionTail++] = rn;
-                    }
-                  } else if (status[rn] !== 3) {
-                    // Check bordering pixels
-                    const nIdx = rn * 4;
-                    const nr = data[nIdx], ng = data[nIdx + 1], nb = data[nIdx + 2];
-                    const lum = 0.299 * nr + 0.587 * ng + 0.114 * nb;
-                    // If it touches a dark stroke (e.g. text outline of '揮手', '爬山中'), it's text/art!
-                    if (lum < 60) {
-                      touchesTextStroke = true;
-                    }
-                    if (nr > 190 && ng > 190 && nb > 190) {
-                      touchesWhiteBorder = true;
-                    }
+                if (rn !== -1 && status[rn] === 0 && checkChroma(rn * 4)) {
+                  if (regionTail < regionQueue.length) {
+                    status[rn] = 3;
+                    regionQueue[regionTail++] = rn;
                   }
                 }
               }
             }
 
-            const avgColorDiff = regionTail > 0 ? sumColorDiff / regionTail : 999;
-
-            // Only clear as background if it DOES NOT touch text stroke AND color is pure background green
-            const isSafeHole = !touchesTextStroke && touchesWhiteBorder && avgColorDiff < 20;
+            const avgGDiff = regionTail > 0 ? sumGDiff / regionTail : 0;
+            // 只要是符合綠幕特徵的連通死角島嶼，全部清除為透明背景
+            const isChromaVoid = avgGDiff >= 18;
 
             for (let q = 0; q < regionTail; q++) {
-              status[regionQueue[q]] = isSafeHole ? 1 : 2;
+              status[regionQueue[q]] = isChromaVoid ? 1 : 2;
             }
           }
         }
       }
 
-      // Step 3: Set Alpha 0 strictly for validated exterior background
+      // Step 3: 將所有標記為 1 的像素設為透明
       for (let i = 0; i < totalPixels; i++) {
         if (status[i] === 1) {
           data[i * 4 + 3] = 0;
         }
       }
-      // Step 4: Alpha Erosion (Trim 1-3px from outer edge only)
+
+      // Step 4: Alpha 侵蝕平滑 (Trim 1-3px)
       if (erosion > 0) {
         const alphaCopy = new Uint8Array(totalPixels);
         for (let i = 0; i < totalPixels; i++) {
@@ -998,21 +997,27 @@
         }
       }
 
-      // Step 5: Safe Despill - ONLY targets near-white die-cut border pixels
+      // Step 5: 邊緣泛綠溢色淨化 (Enhanced Despill)
       if (despill) {
         for (let i = 0; i < totalPixels; i++) {
           if (data[i * 4 + 3] > 0) {
             const r = data[i * 4];
             const g = data[i * 4 + 1];
             const b = data[i * 4 + 2];
+            const maxRB = Math.max(r, b);
 
-            // Only clean pixels that are basically WHITE borders with green fringe
-            if (r > 165 && b > 165 && g > Math.max(r, b)) {
-              data[i * 4 + 1] = Math.max(r, b);
-              if (r > 195 && b > 195) {
-                data[i * 4] = 255;
-                data[i * 4 + 1] = 255;
-                data[i * 4 + 2] = 255;
+            // 當綠色大於紅藍時，抑制邊緣泛綠光圈
+            if (g > maxRB && (g - maxRB) > 4) {
+              // 若是白色邊界抗鋸齒過渡
+              if (r > 150 && b > 150) {
+                data[i * 4 + 1] = maxRB;
+                if (r > 190 && b > 190) {
+                  data[i * 4] = 255;
+                  data[i * 4 + 1] = 255;
+                  data[i * 4 + 2] = 255;
+                }
+              } else if (g > maxRB + 15) {
+                data[i * 4 + 1] = maxRB;
               }
             }
           }
@@ -1023,10 +1028,6 @@
       return canvas;
     }
 
-    /**
-     * Ensure every grid cell has its own PRE-SLICE source offset and scale.
-     * These offsets move and scale the sampling rectangle on the master sheet BEFORE cropping.
-     */
     function ensureCellAdjustments(reset = false) {
       const count = state.cols * state.rows;
       if (reset || !state.cellAdjustments || state.cellAdjustments.length !== count) {
