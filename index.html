@@ -3,381 +3,527 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LINE 貼圖智慧去背與 5x4 自動切圖工作站 | Sticker Studio Pro</title>
-  <!-- Google Fonts -->
+  <title>Sticker Studio PRO | LINE 貼圖綠幕智慧去背 & 5×4 自動切割工作站</title>
+  <!-- Google Fonts: Plus Jakarta Sans & Noto Sans TC -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
-  <!-- FontAwesome Icons -->
+  <!-- FontAwesome 6.5.1 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <!-- JSZip for batch download -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <!-- FileSaver.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-  <link rel="stylesheet" href="style.css">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    :root {
+      --bg-dark-base: #0b0f19;
+      --bg-dark-panel: #111827;
+      --bg-dark-card: #192231;
+      --border-dark: #273449;
+      --primary-purple: #6366f1;
+      --primary-purple-hover: #4f46e5;
+      --line-green: #06c755;
+      --accent-cyan: #06b6d4;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', 'Noto Sans TC', sans-serif;
+      background-color: var(--bg-dark-base);
+      color: #f3f4f6;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Checkerboard patterns */
+    .bg-checker {
+      background-color: #141b26;
+      background-image: 
+        linear-gradient(45deg, #1e293b 25%, transparent 25%), 
+        linear-gradient(-45deg, #1e293b 25%, transparent 25%), 
+        linear-gradient(45deg, transparent 75%, #1e293b 75%), 
+        linear-gradient(-45deg, transparent 75%, #1e293b 75%);
+      background-size: 14px 14px;
+      background-position: 0 0, 0 7px, 7px -7px, -7px 0px;
+    }
+
+    .bg-line-chat {
+      background-color: #849ebf;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #273449;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3e4f6a;
+    }
+
+    /* Split Slider Handle */
+    .split-divider-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: #ffffff;
+      cursor: ew-resize;
+      box-shadow: 0 0 10px rgba(0,0,0,0.8);
+      z-index: 30;
+    }
+    .split-handle-btn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #ffffff;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+  </style>
 </head>
-<body class="dark-theme">
-  <!-- Top Navigation -->
-  <header class="app-header">
-    <div class="logo-area">
-      <div class="logo-icon">
-        <i class="fa-solid fa-wand-magic-sparkles"></i>
+<body class="select-none text-slate-100">
+
+  <!-- Top Navigation Header -->
+  <header class="h-14 bg-[#101726] border-b border-[#212c3f] flex items-center justify-between px-4 flex-shrink-0 z-30">
+    <div class="flex items-center space-x-3">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-md shadow-indigo-950">
+        <i class="fa-solid fa-wand-magic-sparkles text-sm"></i>
       </div>
-      <div class="logo-text">
-        <h1>Sticker Studio <span>PRO</span></h1>
-        <p>LINE 貼圖綠幕智慧去背 & 5×4 自動切割工作站</p>
+      <div>
+        <div class="flex items-center gap-1.5 leading-none">
+          <h1 class="text-sm font-extrabold tracking-tight text-white">Sticker Studio</h1>
+          <span class="bg-indigo-500/20 text-indigo-400 text-[10px] font-black px-1.5 py-0.5 rounded border border-indigo-500/40">PRO</span>
+        </div>
+        <p class="text-[10px] text-slate-400 mt-1">LINE 貼圖綠幕智慧去背 & 5×4 自動切割工作站</p>
       </div>
     </div>
 
-    <div class="header-actions">
-      <button class="btn btn-outline" id="loadSampleBtn" title="載入台股壁虎貼圖 20 張範例">
-        <i class="fa-solid fa-wand-sparkles"></i> 載入台股貼圖範例 (20張)
+    <!-- Right Header Action Buttons -->
+    <div class="flex items-center space-x-2.5">
+      <button id="loadSampleBtn" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#1e293b] hover:bg-[#2c3b52] text-slate-200 border border-[#334155] transition flex items-center gap-2 shadow-sm">
+        <i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i>
+        <span>載入台股貼圖範例 (20張)</span>
       </button>
-      <button class="btn btn-primary" id="exportAllZipBtn" disabled>
-        <i class="fa-solid fa-file-zipper"></i> 一鍵打包 LINE 貼圖包 (ZIP)
+      <button id="exportAllZipBtn" disabled class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-40 disabled:cursor-not-allowed text-white transition flex items-center gap-2 shadow-md shadow-indigo-950/60">
+        <i class="fa-solid fa-file-zipper"></i>
+        <span>一鍵打包 LINE 貼圖包 (ZIP)</span>
       </button>
     </div>
   </header>
 
-  <!-- Main App Layout -->
-  <main class="app-main">
-    <!-- Left Sidebar: Controls & Tools -->
-    <aside class="sidebar-panel">
-      <!-- Upload Section -->
-      <section class="panel-section">
-        <div class="section-title">
-          <i class="fa-solid fa-cloud-arrow-up"></i>
+  <!-- Main Grid Workspace Layout -->
+  <main class="flex-1 flex overflow-hidden">
+    
+    <!-- Left Sidebar: Controls & Parameters -->
+    <aside class="w-[300px] bg-[#0e1422] border-r border-[#1e293b] flex flex-col h-full flex-shrink-0 overflow-y-auto p-3.5 space-y-3.5">
+      
+      <!-- Upload Card -->
+      <section class="bg-[#141b2a] border border-[#222e42] rounded-xl p-3 space-y-2">
+        <div class="text-[11px] font-bold text-slate-300 flex items-center gap-2">
+          <i class="fa-solid fa-cloud-arrow-up text-indigo-400"></i>
           <span>圖片來源</span>
         </div>
-        <div class="drop-zone" id="dropZone">
-          <input type="file" id="fileInput" accept="image/*" class="file-input-hidden">
-          <div class="drop-content">
-            <i class="fa-solid fa-image-polaroid drop-icon"></i>
-            <p class="drop-text">拖曳圖片到此處 或 <span>點擊上傳</span></p>
-            <span class="drop-sub">支援 2560x1664 大圖、PNG、JPG、WEBP</span>
-          </div>
+        <div id="dropZone" class="border-2 border-dashed border-[#2b3a52] hover:border-indigo-500 rounded-xl p-3 text-center cursor-pointer transition bg-[#0d131f]/70 group">
+          <input type="file" id="fileInput" accept="image/*" class="hidden">
+          <i class="fa-solid fa-image text-xl text-slate-500 group-hover:text-indigo-400 transition mb-1"></i>
+          <p class="text-xs font-medium text-slate-300 group-hover:text-white">拖曳圖片到此處 或 <span class="text-indigo-400 underline font-semibold">點擊上傳</span></p>
+          <span class="text-[9px] text-slate-500 block mt-0.5">支援 2560x1664 大圖、PNG、JPG、WEBP</span>
         </div>
       </section>
 
-      <!-- Chroma Key / Background Removal Settings -->
-      <section class="panel-section">
-        <div class="section-title">
-          <i class="fa-solid fa-sliders"></i>
-          <span>綠幕去背參數 (Chroma Key)</span>
+      <!-- Chroma Key Settings -->
+      <section class="bg-[#141b2a] border border-[#222e42] rounded-xl p-3 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <div class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5">
+            <i class="fa-solid fa-sliders text-indigo-400"></i>
+            <span>綠幕去背參數 (CHROMA KEY)</span>
+          </div>
+          <button id="resetParamsBtn" class="text-[10px] text-slate-400 hover:text-slate-200">還原預設</button>
         </div>
 
-        <div class="control-group">
-          <div class="control-label">
-            <span>背景基準色</span>
-            <div class="color-picker-wrapper">
-              <input type="color" id="keyColorInput" value="#07FD04">
-              <span id="keyColorVal">#07FD04</span>
+        <!-- Target Color -->
+        <div class="flex items-center justify-between bg-[#0e1422] px-2.5 py-1.5 rounded-lg border border-[#222e42]">
+          <span class="text-[11px] text-slate-400 font-medium">背景基準色</span>
+          <div class="flex items-center gap-2">
+            <div class="w-4 h-4 rounded-full border border-white/20 overflow-hidden relative cursor-pointer shadow">
+              <input type="color" id="keyColorInput" value="#07F40E" class="absolute -inset-2 w-8 h-8 cursor-pointer opacity-0">
+              <div id="keyColorDisplay" class="w-full h-full bg-[#07F40E]"></div>
             </div>
+            <span id="keyColorVal" class="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-500/30">#07F40E</span>
           </div>
         </div>
 
-        <div class="control-group">
-          <div class="control-label">
-            <span>去背靈敏度 (Threshold)</span>
-            <span class="val-badge" id="threshVal">55</span>
+        <!-- Threshold Slider -->
+        <div class="space-y-1">
+          <div class="flex justify-between text-[11px]">
+            <span class="text-slate-400">去背靈敏度 (Threshold)</span>
+            <span id="threshVal" class="font-mono text-indigo-400 font-bold">55</span>
           </div>
-          <input type="range" id="thresholdSlider" min="5" max="100" value="55" class="range-slider">
+          <input type="range" id="thresholdSlider" min="5" max="100" value="55" class="w-full accent-indigo-500 h-1.5 bg-[#222e42] rounded-lg cursor-pointer">
         </div>
 
-        <div class="control-group">
-          <div class="control-label">
-            <span>邊緣平滑過渡 (Smoothness)</span>
-            <span class="val-badge" id="smoothVal">20</span>
+        <!-- Smoothness Slider -->
+        <div class="space-y-1">
+          <div class="flex justify-between text-[11px]">
+            <span class="text-slate-400">邊緣平滑過渡 (Smoothness)</span>
+            <span id="smoothVal" class="font-mono text-indigo-400 font-bold">20</span>
           </div>
-          <input type="range" id="smoothnessSlider" min="2" max="60" value="20" class="range-slider">
+          <input type="range" id="smoothnessSlider" min="2" max="60" value="20" class="w-full accent-indigo-500 h-1.5 bg-[#222e42] rounded-lg cursor-pointer">
         </div>
 
-        <div class="control-group">
-          <div class="control-label">
-            <span>防綠邊溢色消除 (Spill Despill)</span>
-            <label class="toggle-switch">
-              <input type="checkbox" id="despillToggle" checked>
-              <span class="slider round"></span>
-            </label>
+        <!-- Erosion Slider (Shaving green border edge) -->
+        <div class="space-y-1">
+          <div class="flex justify-between text-[11px]">
+            <span class="text-slate-400">白框邊緣修邊 (Erosion 削邊)</span>
+            <span id="erosionVal" class="font-mono text-indigo-400 font-bold">1px</span>
           </div>
-          <p class="control-hint">消除白色模切外框邊緣的綠色反光，維持白邊純淨</p>
+          <input type="range" id="erosionSlider" min="0" max="3" step="1" value="1" class="w-full accent-indigo-500 h-1.5 bg-[#222e42] rounded-lg cursor-pointer">
+        </div>
+
+        <!-- Despill Toggle Switch -->
+        <div class="pt-1.5 border-t border-[#222e42] flex items-center justify-between">
+          <div>
+            <span class="text-[11px] font-semibold text-slate-300 block">防綠邊溢色消除 (Spill Despill)</span>
+            <span class="text-[9px] text-slate-500 leading-tight block">僅消除白色模切外框邊緣的綠色反光，維持白邊純淨</span>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer flex-shrink-0 ml-2">
+            <input type="checkbox" id="despillToggle" checked class="sr-only peer">
+            <div class="w-8 h-4 bg-[#26354d] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-indigo-600"></div>
+          </label>
+        </div>
+
+        <!-- Hole Clearing Toggle Switch - Default unchecked to safeguard green text -->
+        <div class="pt-1.5 border-t border-[#222e42] flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-[11px] font-semibold text-slate-300">內部死角清除 (Enclosed Voids)</span>
+              <span class="text-[8px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.2 rounded border border-emerald-500/30">安全保護防誤刪</span>
+            </div>
+            <span class="text-[9px] text-slate-500 leading-tight block">針對肢體死角穿透背景；具備黑邊文字辨識，安全保護「揮手」「爬山中」等綠字</span>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer flex-shrink-0 ml-2">
+            <input type="checkbox" id="cleanHolesToggle" class="sr-only peer">
+            <div class="w-8 h-4 bg-[#26354d] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-indigo-600"></div>
+          </label>
         </div>
       </section>
 
       <!-- Grid Slicing Settings -->
-      <section class="panel-section">
-        <div class="section-title">
-          <i class="fa-solid fa-table-cells"></i>
-          <span>網格切割設定 (Grid Slicing)</span>
+      <section class="bg-[#141b2a] border border-[#222e42] rounded-xl p-3 space-y-2.5">
+        <div class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5">
+          <i class="fa-solid fa-table-cells text-indigo-400"></i>
+          <span>網格切割設定 (GRID SLICING)</span>
         </div>
 
-        <div class="grid-presets">
-          <button class="preset-btn active" data-cols="5" data-rows="4">5 × 4 (20張 - 標準)</button>
-          <button class="preset-btn" data-cols="4" data-rows="6">4 × 6 (24張)</button>
-          <button class="preset-btn" data-cols="4" data-rows="4">4 × 4 (16張)</button>
-          <button class="preset-btn" data-cols="4" data-rows="2">4 × 2 (8張)</button>
+        <!-- Grid Preset Buttons -->
+        <div class="grid grid-cols-2 gap-1.5">
+          <button class="grid-preset-btn px-2 py-1.5 rounded-lg text-[10px] font-bold bg-indigo-600 text-white border border-indigo-500 transition shadow-sm" data-cols="5" data-rows="4">
+            5 × 4 (20張 - 標準)
+          </button>
+          <button class="grid-preset-btn px-2 py-1.5 rounded-lg text-[10px] font-semibold bg-[#0e1422] text-slate-300 hover:bg-[#1f2a3f] border border-[#27354b] transition" data-cols="4" data-rows="6">
+            4 × 6 (24張)
+          </button>
+          <button class="grid-preset-btn px-2 py-1.5 rounded-lg text-[10px] font-semibold bg-[#0e1422] text-slate-300 hover:bg-[#1f2a3f] border border-[#27354b] transition" data-cols="4" data-rows="4">
+            4 × 4 (16張)
+          </button>
+          <button class="grid-preset-btn px-2 py-1.5 rounded-lg text-[10px] font-semibold bg-[#0e1422] text-slate-300 hover:bg-[#1f2a3f] border border-[#27354b] transition" data-cols="4" data-rows="2">
+            4 × 2 (8張)
+          </button>
         </div>
 
-        <div class="grid-inputs-row">
-          <div class="input-field">
-            <label>直欄 (Columns)</label>
-            <input type="number" id="colsInput" min="1" max="10" value="5">
+        <!-- Custom Cols / Rows input -->
+        <div class="grid grid-cols-2 gap-2">
+          <div class="bg-[#0e1422] p-1.5 rounded-lg border border-[#222e42]">
+            <label class="text-[9px] text-slate-400 block mb-0.5">直欄 (Columns)</label>
+            <input type="number" id="colsInput" min="1" max="10" value="5" class="w-full bg-[#162032] border border-[#28374f] rounded px-2 py-0.5 text-xs text-center font-bold text-white">
           </div>
-          <div class="input-field">
-            <label>橫排 (Rows)</label>
-            <input type="number" id="rowsInput" min="1" max="10" value="4">
+          <div class="bg-[#0e1422] p-1.5 rounded-lg border border-[#222e42]">
+            <label class="text-[9px] text-slate-400 block mb-0.5">橫排 (Rows)</label>
+            <input type="number" id="rowsInput" min="1" max="10" value="4" class="w-full bg-[#162032] border border-[#28374f] rounded px-2 py-0.5 text-xs text-center font-bold text-white">
           </div>
         </div>
 
-        <div class="control-group">
-          <div class="control-label">
-            <span>主體自動緊縮留白 (Safe Padding)</span>
-            <span class="val-badge" id="paddingVal">10px</span>
+        <!-- Safe Padding Slider -->
+        <div class="space-y-1">
+          <div class="flex justify-between text-[11px]">
+            <span class="text-slate-400">主體自動緊縮留白 (Safe Padding)</span>
+            <span id="paddingVal" class="font-mono text-indigo-400 font-bold">10px</span>
           </div>
-          <input type="range" id="paddingSlider" min="0" max="30" value="10" class="range-slider">
+          <input type="range" id="paddingSlider" min="0" max="30" value="10" class="w-full accent-indigo-500 h-1.5 bg-[#222e42] rounded-lg cursor-pointer">
         </div>
       </section>
 
-      <!-- LINE Specification Rules -->
-      <section class="panel-section">
-        <div class="section-title">
-          <i class="fa-brands fa-line" style="color: #06c755;"></i>
+      <!-- LINE Specification Rules Checklist -->
+      <section class="bg-[#141b2a]/70 border border-[#222e42] rounded-xl p-3 space-y-1.5 text-[10px] text-slate-400">
+        <div class="font-bold text-emerald-400 flex items-center gap-1.5 text-[11px]">
+          <i class="fa-brands fa-line"></i>
           <span>LINE 貼圖官方規範自動適配</span>
         </div>
-        <ul class="spec-list">
-          <li><i class="fa-solid fa-circle-check"></i> 最大尺寸：370 × 320 px (自動等比放大)</li>
-          <li><i class="fa-solid fa-circle-check"></i> 強制偶數像素寬高 (Even Dimensions)</li>
-          <li><i class="fa-solid fa-circle-check"></i> 自動產生 <code>main.png</code> (240×240)</li>
-          <li><i class="fa-solid fa-circle-check"></i> 自動產生 <code>tab.png</code> (96×74)</li>
-        </ul>
+        <div class="flex items-center gap-1.5"><i class="fa-solid fa-circle-check text-emerald-400 text-[9px]"></i> 最大尺寸：370 × 320 px (自動等比放大)</div>
+        <div class="flex items-center gap-1.5"><i class="fa-solid fa-circle-check text-emerald-400 text-[9px]"></i> 強制偶數像素寬高 (Even Dimensions)</div>
+        <div class="flex items-center gap-1.5"><i class="fa-solid fa-circle-check text-emerald-400 text-[9px]"></i> 自動產生 <code>main.png</code> (240×240)</div>
+        <div class="flex items-center gap-1.5"><i class="fa-solid fa-circle-check text-emerald-400 text-[9px]"></i> 自動產生 <code>tab.png</code> (96×74)</div>
       </section>
     </aside>
 
-    <!-- Center Workspace: Canvas Viewport -->
-    <section class="workspace-area">
+    <!-- Center Workspace: Interactive Canvas Viewport -->
+    <section class="flex-1 flex flex-col bg-[#080c14] min-w-0 relative">
       <!-- Workspace Toolbar -->
-      <div class="workspace-toolbar">
-        <div class="view-tabs">
-          <button class="view-tab active" id="tabProcessed" data-view="processed">
+      <div class="h-10 bg-[#0f1624] border-b border-[#1e293b] flex items-center justify-between px-4 z-20">
+        <!-- View Mode Switcher -->
+        <div class="flex space-x-1">
+          <button id="viewProcessedBtn" class="px-3 py-1 rounded-md text-[11px] font-semibold bg-[#1a2333] text-slate-300 hover:text-white border border-transparent transition">
             <i class="fa-solid fa-wand-magic"></i> 去背效果預覽
           </button>
-          <button class="view-tab" id="tabGrid" data-view="grid">
-            <i class="fa-solid fa-grid-2"></i> 5×4 網格切割線
+          <button id="viewGridBtn" class="px-3 py-1 rounded-md text-[11px] font-semibold bg-indigo-600 text-white border border-indigo-500 transition shadow-sm">
+            <i class="fa-solid fa-border-all"></i> 5×4 網格切割線
           </button>
-          <button class="view-tab" id="tabSplit" data-view="split">
+          <button id="viewSplitBtn" class="px-3 py-1 rounded-md text-[11px] font-semibold bg-[#1a2333] text-slate-300 hover:text-white border border-transparent transition">
             <i class="fa-solid fa-arrows-split-up-and-left"></i> 即時對比 (Before/After)
           </button>
         </div>
 
-        <div class="bg-selector">
-          <span class="bg-label">預覽背景:</span>
-          <button class="bg-btn active bg-checker" data-bg="checker" title="透明棋盤格"></button>
-          <button class="bg-btn bg-dark" data-bg="dark" title="深黑底色"></button>
-          <button class="bg-btn bg-white" data-bg="white" title="純白底色"></button>
-          <button class="bg-btn bg-line" data-bg="line" title="LINE 經典聊天底色"></button>
+        <!-- Background Mode Selector -->
+        <div class="flex items-center space-x-2">
+          <span class="text-[10px] text-slate-400">預覽背景:</span>
+          <button class="bg-mode-btn w-4 h-4 rounded-full border-2 border-indigo-500 bg-checker" data-bg="checker" title="透明棋盤格"></button>
+          <button class="bg-mode-btn w-4 h-4 rounded-full border-2 border-transparent bg-[#080c14]" data-bg="dark" title="深黑底色"></button>
+          <button class="bg-mode-btn w-4 h-4 rounded-full border-2 border-transparent bg-white" data-bg="white" title="純白底色"></button>
+          <button class="bg-mode-btn w-4 h-4 rounded-full border-2 border-transparent bg-line-chat" data-bg="line" title="LINE 經典聊天底色"></button>
         </div>
       </div>
 
-      <!-- Canvas Container -->
-      <div class="canvas-viewport" id="canvasViewport">
+      <!-- Main Canvas Stage Area -->
+      <div id="viewportContainer" class="flex-1 relative overflow-auto flex items-center justify-center p-4 bg-[#080c14]">
         <!-- Empty State -->
-        <div class="empty-state" id="emptyState">
-          <div class="empty-icon">
-            <i class="fa-solid fa-layer-group"></i>
+        <div id="emptyState" class="text-center max-w-sm p-8 rounded-2xl border border-[#1f2c41] bg-[#0f1726]/80 shadow-2xl">
+          <div class="w-16 h-16 mx-auto rounded-2xl bg-[#1a2538] flex items-center justify-center text-indigo-400 mb-3.5 shadow-inner">
+            <i class="fa-solid fa-layer-group text-2xl"></i>
           </div>
-          <h3>尚未載入圖片</h3>
-          <p>請從左側上傳 5×4 綠幕貼圖大圖，或點擊下方按鈕直接載入台股壁虎範例！</p>
-          <button class="btn btn-primary" id="emptyLoadSampleBtn">
-            <i class="fa-solid fa-sparkles"></i> 載入台股壁虎貼圖範例 (20格)
+          <h3 class="text-sm font-bold text-slate-100 mb-1">尚未載入貼圖大圖</h3>
+          <p class="text-xs text-slate-400 mb-4 leading-relaxed">請將你產生的 5×4 綠底貼圖拖曳到左側，或點擊下方直接載入台股壁虎貼圖範例！</p>
+          <button id="emptySampleBtn" class="w-full py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-950">
+            <i class="fa-solid fa-sparkles"></i> 載入台股貼圖範例 (20張)
           </button>
         </div>
 
-        <!-- Realtime Processing Stage -->
-        <div class="canvas-stage hidden" id="canvasStage">
-          <div class="canvas-wrapper bg-checker" id="canvasWrapper">
-            <canvas id="mainCanvas"></canvas>
-            <!-- Split Compare Overlay -->
-            <div class="split-overlay hidden" id="splitOverlay">
-              <canvas id="splitCanvas"></canvas>
-              <div class="split-divider" id="splitDivider">
-                <div class="split-handle">
-                  <i class="fa-solid fa-arrows-left-right"></i>
-                </div>
+        <!-- Working Canvas Container -->
+        <div id="canvasWrapper" class="relative shadow-2xl rounded-lg overflow-hidden bg-checker hidden border border-[#273449]">
+          <!-- Processed Transparent Canvas -->
+          <canvas id="mainCanvas" class="block max-w-full max-h-[calc(100vh-120px)] w-auto h-auto"></canvas>
+          
+          <!-- Split Before Canvas (Overlay) -->
+          <div id="splitOverlay" class="absolute inset-0 overflow-hidden pointer-events-none hidden">
+            <canvas id="originalCanvas" class="block max-w-full max-h-[calc(100vh-120px)] w-auto h-auto"></canvas>
+            <div id="splitDivider" class="split-divider-line">
+              <div class="split-handle-btn">
+                <i class="fa-solid fa-arrows-left-right"></i>
               </div>
             </div>
-            <!-- Grid Cutline Overlay -->
-            <svg class="grid-overlay-svg" id="gridSvg"></svg>
           </div>
+
+          <!-- Grid Lines Overlay SVG with #1 ~ #20 Cell Badges -->
+          <svg id="gridSvg" class="absolute inset-0 w-full h-full pointer-events-none"></svg>
         </div>
 
-        <!-- Processing Status Bar -->
-        <div class="processing-badge hidden" id="processingBadge">
-          <i class="fa-solid fa-spinner fa-spin"></i> 處理中...
+        <!-- Processing Indicator Badge -->
+        <div id="loadingBadge" class="hidden absolute top-4 right-4 bg-[#0f1726]/90 border border-indigo-500/50 text-indigo-300 text-xs px-3.5 py-1.5 rounded-full flex items-center gap-2 shadow-xl backdrop-blur">
+          <i class="fa-solid fa-spinner fa-spin text-indigo-400"></i>
+          <span id="loadingText">智慧去背與精確分割中...</span>
         </div>
       </div>
     </section>
 
     <!-- Right Sidebar: Stickers Gallery & LINE Simulator -->
-    <aside class="gallery-panel">
-      <div class="gallery-tabs">
-        <button class="g-tab active" id="tabStickerList">
-          <i class="fa-solid fa-grid"></i> 貼圖清單 (<span id="stickerCountBadge">20</span>)
+    <aside class="w-[340px] bg-[#0e1422] border-l border-[#1e293b] flex flex-col h-full flex-shrink-0">
+      <!-- Tabs Header -->
+      <div class="h-10 border-b border-[#1e293b] flex items-center px-2 flex-shrink-0 bg-[#0f1624]">
+        <button id="tabListBtn" class="flex-1 py-1.5 text-xs font-bold text-indigo-400 border-b-2 border-indigo-500 flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-grid-2"></i> 貼圖清單 (<span id="stickerCountBadge">20</span>)
         </button>
-        <button class="g-tab" id="tabLineSim">
-          <i class="fa-brands fa-line" style="color: #06c755;"></i> LINE 聊天室模擬
+        <button id="tabSimBtn" class="flex-1 py-1.5 text-xs font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center justify-center gap-1.5">
+          <i class="fa-brands fa-line text-emerald-400"></i> LINE 聊天室模擬
         </button>
       </div>
 
-      <!-- Sticker Thumbnails View -->
-      <div class="gallery-content" id="stickerListView">
-        <div class="gallery-actions-bar">
-          <span class="gallery-stats" id="galleryStatsText">點擊貼圖可放大下載</span>
-          <button class="btn btn-sm btn-outline" id="reprocessBtn" title="重新計算所有貼圖">
+      <!-- Sticker Cards List -->
+      <div id="galleryContainer" class="flex-1 overflow-y-auto p-2.5 space-y-2.5">
+        <!-- Sub-header: Total count info & Re-cut button -->
+        <div class="flex items-center justify-between px-1 text-xs">
+          <div class="text-slate-400 text-[11px] font-medium" id="statsText">
+            共 <span id="summaryCount">20</span> 張貼圖 (Main: <span id="summaryMain">#1</span>, Tab: <span id="summaryTab">#1</span>)
+          </div>
+          <button id="reprocessBtn" class="text-[10px] text-slate-300 hover:text-white bg-[#192336] hover:bg-[#25334c] border border-[#2b3952] px-2 py-0.5 rounded transition flex items-center gap-1 shadow-sm">
             <i class="fa-solid fa-rotate"></i> 重新切圖
           </button>
         </div>
 
-        <div class="stickers-grid" id="stickersGrid">
-          <!-- Filled dynamically by JavaScript -->
+        <!-- Dynamic Sticker Cards 2-Column Grid -->
+        <div id="stickersGrid" class="grid grid-cols-2 gap-2">
+          <!-- Populated dynamically via JS -->
         </div>
 
         <!-- Special Assets (Main & Tab) -->
-        <div class="special-assets-box">
-          <div class="special-asset-item">
-            <div class="special-thumb" id="mainThumbPreview">
-              <img id="mainImgPreview" src="" alt="Main Icon">
+        <div class="grid grid-cols-2 gap-2 pt-1 border-t border-[#1e293b]">
+          <div class="bg-[#141b2a] p-2 rounded-xl border border-[#222e42] flex items-center space-x-2">
+            <div class="w-10 h-10 rounded-lg bg-checker flex items-center justify-center overflow-hidden border border-[#273449]">
+              <img id="mainIconPreview" class="w-full h-full object-contain" alt="main.png">
             </div>
-            <div class="special-info">
-              <h4>main.png (240×240)</h4>
-              <p>LINE 貼圖主選單圖示</p>
-              <button class="btn btn-xs btn-outline" id="downloadMainBtn"><i class="fa-solid fa-download"></i> 下載</button>
+            <div class="min-w-0 flex-1">
+              <div class="text-[10px] font-bold text-emerald-400 truncate">main.png</div>
+              <div class="text-[9px] text-slate-400">240×240 (主圖)</div>
+              <button id="downloadMainBtn" class="text-[9px] text-indigo-400 hover:text-indigo-300 underline font-semibold">下載</button>
             </div>
           </div>
 
-          <div class="special-asset-item">
-            <div class="special-thumb" id="tabThumbPreview">
-              <img id="tabImgPreview" src="" alt="Tab Icon">
+          <div class="bg-[#141b2a] p-2 rounded-xl border border-[#222e42] flex items-center space-x-2">
+            <div class="w-10 h-10 rounded-lg bg-checker flex items-center justify-center overflow-hidden border border-[#273449]">
+              <img id="tabIconPreview" class="w-full h-full object-contain" alt="tab.png">
             </div>
-            <div class="special-info">
-              <h4>tab.png (96×74)</h4>
-              <p>LINE 貼圖標籤頁籤圖示</p>
-              <button class="btn btn-xs btn-outline" id="downloadTabBtn"><i class="fa-solid fa-download"></i> 下載</button>
+            <div class="min-w-0 flex-1">
+              <div class="text-[10px] font-bold text-cyan-400 truncate">tab.png</div>
+              <div class="text-[9px] text-slate-400">96×74 (頁籤)</div>
+              <button id="downloadTabBtn" class="text-[9px] text-indigo-400 hover:text-indigo-300 underline font-semibold">下載</button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- LINE Chatroom Simulator View -->
-      <div class="gallery-content hidden" id="lineSimView">
-        <div class="line-phone-mockup">
-          <div class="phone-header">
-            <div class="phone-back"><i class="fa-solid fa-chevron-left"></i></div>
-            <div class="phone-title">
-              <span class="friend-name">投資交流群 📈</span>
-              <span class="chat-members"><i class="fa-solid fa-users"></i> 20</span>
+      <!-- LINE Chat Simulator View -->
+      <div id="simulatorContainer" class="flex-1 hidden flex-col bg-[#849ebf] overflow-hidden relative">
+        <!-- Phone Simulator Header -->
+        <div class="h-9 bg-black/25 backdrop-blur px-3 flex items-center justify-between text-white text-xs border-b border-white/10">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-chevron-left text-[10px]"></i>
+            <span class="font-bold text-[11px]">股市戰友交流群 📈</span>
+          </div>
+          <i class="fa-solid fa-bars text-[11px]"></i>
+        </div>
+
+        <!-- Chat Room Messages -->
+        <div id="simMessagesArea" class="flex-1 overflow-y-auto p-3 space-y-2.5">
+          <div class="flex items-end space-x-1.5">
+            <div class="w-6 h-6 rounded-full bg-amber-200 flex items-center justify-center text-[11px] shadow">🐱</div>
+            <div class="bg-white text-slate-900 px-2.5 py-1.5 rounded-2xl rounded-bl-xs text-[11px] max-w-[75%] shadow-sm">
+              今天大盤萬八站穩了嗎？大家手上的持股表現如何？
             </div>
-            <div class="phone-actions"><i class="fa-solid fa-magnifying-glass"></i> <i class="fa-solid fa-bars"></i></div>
+            <span class="text-[8px] text-white/80 pb-0.5">09:12</span>
           </div>
 
-          <div class="chat-messages-area" id="chatMessagesArea">
-            <div class="chat-date">今天</div>
-            <div class="msg-bubble left">
-              <div class="avatar">👨‍💼</div>
-              <div class="bubble-content">
-                <p>今天大盤萬八站穩了嗎？大家手上的持股表現如何？</p>
-                <span class="msg-time">09:15</span>
-              </div>
-            </div>
-            <div class="msg-bubble right" id="sampleSentSticker">
-              <!-- Animated sample sticker -->
-              <div class="sticker-bubble" id="simStickerTarget">
-                <img id="simStickerImg" src="" alt="LINE Sticker">
-                <span class="msg-time">09:16 <span class="read-status">已讀</span></span>
-              </div>
+          <!-- Dynamic Active Sent Sticker Bubble -->
+          <div class="flex items-end justify-end space-x-1.5">
+            <span class="text-[8px] text-white/80 pb-0.5">已讀 09:15</span>
+            <div class="max-w-[130px] max-h-[120px] drop-shadow-md">
+              <img id="simCurrentSticker" src="" class="w-full h-auto object-contain cursor-pointer" alt="Sent Sticker">
             </div>
           </div>
+        </div>
 
-          <!-- LINE Sticker Picker Keyboard -->
-          <div class="phone-sticker-keyboard">
-            <div class="keyboard-header">
-              <span>點擊下方貼圖即時發送測試：</span>
-            </div>
-            <div class="keyboard-grid" id="simKeyboardGrid">
-              <!-- Dynamic mini sticker list -->
-            </div>
+        <!-- Simulator Sticker Keyboard Selector -->
+        <div class="h-44 bg-[#101726] border-t border-[#1e293b] p-2 flex flex-col">
+          <div class="text-[9px] text-slate-400 mb-1 px-1 flex justify-between">
+            <span>點擊下方貼圖即時在聊天室發送測試：</span>
+          </div>
+          <div id="simKeyboardGrid" class="flex-1 overflow-y-auto grid grid-cols-4 gap-1 p-1 bg-[#090d16] rounded-lg">
+            <!-- Populated dynamically via JS -->
           </div>
         </div>
       </div>
     </aside>
   </main>
 
-  <!-- Single Sticker Modal Preview & Edit -->
-  <div class="modal-overlay hidden" id="stickerModal">
-    <div class="modal-card">
-      <div class="modal-header">
-        <div class="modal-header-left">
-          <h3 id="modalTitle">貼圖微調編輯器 (01.png)</h3>
-          <div class="modal-badges" id="modalBadges"></div>
+  <!-- Single Sticker Eraser & Fine-Tuning Modal -->
+  <div id="editorModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-[#121927] border border-[#26354b] w-full max-w-xl rounded-2xl overflow-hidden shadow-2xl flex flex-col">
+      <!-- Modal Header -->
+      <div class="h-11 border-b border-[#212c3f] px-4 flex items-center justify-between bg-[#151e2f]">
+        <div class="flex items-center space-x-2">
+          <h3 id="modalTitle" class="text-xs font-bold text-white">微調橡皮擦 - 01.png</h3>
+          <span class="text-[9px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded font-mono border border-indigo-500/30">370 × 320 px (LINE 規範)</span>
         </div>
-        <button class="modal-close" id="modalCloseBtn"><i class="fa-solid fa-xmark"></i></button>
+        <button id="modalCloseBtn" class="text-slate-400 hover:text-white text-xs"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="modal-body">
-        <!-- Editor Canvas Box -->
-        <div class="modal-canvas-area">
-          <div class="modal-preview-box bg-checker" id="modalPreviewBox">
-            <canvas id="editorCanvas"></canvas>
-            <div class="brush-cursor" id="brushCursor"></div>
+
+      <!-- Modal Body -->
+      <div class="p-4 flex flex-col md:flex-row gap-4">
+        <!-- Canvas Box -->
+        <div class="flex-1 flex flex-col items-center">
+          <div class="w-[300px] h-[260px] rounded-xl overflow-hidden bg-checker border border-[#2b3a50] relative shadow-inner flex items-center justify-center">
+            <canvas id="modalCanvas" width="370" height="320" class="w-full h-full object-contain cursor-crosshair"></canvas>
+          </div>
+          <!-- Pre-slice alignment controls: shown BEFORE final slicing -->
+          <div id="preSliceControls" class="w-[300px] mt-2 p-2.5 rounded-xl bg-[#101827] border border-indigo-500/25 hidden space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="text-[10px] font-bold text-indigo-300 flex items-center gap-1.5">
+                <i class="fa-solid fa-crop-simple"></i> 分割前取樣框對位
+              </div>
+              <button id="resetSliceOffsetBtn" class="text-[9px] text-slate-400 hover:text-white"><i class="fa-solid fa-rotate-left"></i> 重設</button>
+            </div>
+            <div>
+              <div class="flex justify-between text-[9px] mb-0.5"><span class="text-slate-400">水平 Source X</span><span id="sliceOffsetXVal" class="font-mono text-indigo-300">0px</span></div>
+              <input type="range" id="sliceOffsetXSlider" value="0" class="w-full accent-indigo-500 h-1.5">
+            </div>
+            <div>
+              <div class="flex justify-between text-[9px] mb-0.5"><span class="text-slate-400">垂直 Source Y</span><span id="sliceOffsetYVal" class="font-mono text-indigo-300">0px</span></div>
+              <input type="range" id="sliceOffsetYSlider" value="0" class="w-full accent-indigo-500 h-1.5">
+            </div>
+            <div class="text-[9px] text-slate-500 leading-relaxed">可直接拖曳上方預覽中的貼圖，把完整角色移進這一格。這裡調整的是「分割前來源範圍」，不是切完後才移動成品。</div>
           </div>
 
-          <!-- Eraser Toolbar -->
-          <div class="editor-toolbar">
-            <div class="toolbar-left">
-              <span class="tool-label"><i class="fa-solid fa-eraser"></i> 橡皮擦模式</span>
-              <div class="brush-size-control">
-                <span>筆刷:</span>
-                <input type="range" id="brushSizeSlider" min="2" max="40" value="12" class="range-slider">
-                <span class="val-badge" id="brushSizeVal">12px</span>
+          <div id="eraserToolbar" class="flex items-center justify-between w-[300px] mt-2 text-xs">
+            <div class="flex items-center space-x-2">
+              <div class="flex bg-[#0f1726] rounded-lg p-0.5 border border-[#28374d]">
+                <button id="modalToolEraser" class="px-2 py-0.5 rounded text-[9px] font-bold bg-indigo-600 text-white transition flex items-center gap-1">
+                  <i class="fa-solid fa-eraser"></i> 橡皮擦
+                </button>
+                <button id="modalToolRestore" class="px-2 py-0.5 rounded text-[9px] font-semibold text-slate-400 hover:text-white transition flex items-center gap-1">
+                  <i class="fa-solid fa-paintbrush"></i> 還原筆刷
+                </button>
               </div>
+              <input type="range" id="brushSizeSlider" min="2" max="35" value="10" class="w-16 accent-indigo-500">
+              <span id="brushSizeVal" class="text-indigo-400 font-mono text-[10px]">10px</span>
             </div>
-            <div class="toolbar-right">
-              <button class="btn btn-xs btn-outline" id="editorResetBtn" title="還原至原始去背狀態">
-                <i class="fa-solid fa-rotate-left"></i> 重設
-              </button>
-              <button class="btn btn-xs btn-primary" id="editorSaveBtn" title="儲存微調修改">
-                <i class="fa-solid fa-check"></i> 儲存微調
-              </button>
-            </div>
+            <button id="modalResetBtn" class="text-slate-400 hover:text-slate-200 text-[10px]">
+              <i class="fa-solid fa-rotate-left"></i> 還原整張
+            </button>
           </div>
         </div>
 
-        <!-- Info & Actions Panel -->
-        <div class="modal-info-panel">
-          <div class="info-row">
-            <span class="info-label">檔名:</span>
-            <span class="info-value" id="modalFilename">01.png</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">解析度:</span>
-            <span class="info-value" id="modalDimensions">370 × 320 px (LINE 偶數規範)</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">檔案格式:</span>
-            <span class="info-value">PNG (32-bit 透明去背)</span>
-          </div>
-          
-          <div class="modal-status-box" id="modalStatusBox">
-            <p class="modal-hint"><i class="fa-solid fa-info-circle"></i> 可在左側畫布直接用滑鼠塗抹擦除殘留雜點，微調完成請按「儲存微調」。</p>
+        <!-- Modal Info & Controls -->
+        <div class="w-full md:w-48 flex flex-col justify-between space-y-2">
+          <div class="p-2.5 rounded-lg bg-[#182233] border border-[#26354b] space-y-1">
+            <div class="text-slate-400 text-[10px] font-semibold">操作指引：</div>
+            <p id="modalGuideText" class="text-slate-300 text-[9px] leading-relaxed">
+              若有極少數邊角雜點，可直接在畫布用滑鼠塗抹擦除，擦除後點擊下方「儲存微調」即可生效！
+            </p>
           </div>
 
-          <div class="modal-actions">
-            <button class="btn btn-card-main-lg" id="modalSetMainBtn">
-              <i class="fa-solid fa-star"></i> <span>設為 Main 封面</span>
+          <div class="space-y-1.5">
+            <button id="modalSetMainBtn" class="w-full py-1.5 rounded-lg bg-[#1a2436] hover:bg-[#25334c] border border-emerald-500/50 text-emerald-400 text-[10px] font-bold transition flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-star text-[9px]"></i> 設為 Main 封面
             </button>
-            <button class="btn btn-card-tab-lg" id="modalSetTabBtn">
-              <i class="fa-solid fa-tag"></i> <span>設為 Tab 標籤</span>
+            <button id="modalSetTabBtn" class="w-full py-1.5 rounded-lg bg-[#1a2436] hover:bg-[#25334c] border border-cyan-500/50 text-cyan-400 text-[10px] font-bold transition flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-tag text-[9px]"></i> 設為 Tab 標籤
             </button>
-            <button class="btn btn-primary" id="modalDownloadBtn">
-              <i class="fa-solid fa-download"></i> 下載此張 PNG
+            <button id="modalSaveBtn" class="w-full py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-md shadow-indigo-950">
+              <i class="fa-solid fa-check"></i> 儲存微調
             </button>
           </div>
         </div>
@@ -385,6 +531,1613 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <!-- ZIP Download Center: persistent manual download fallback -->
+  <div id="zipDownloadCenter" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] hidden items-center justify-center p-4">
+    <div class="w-full max-w-md rounded-2xl bg-[#121927] border border-[#2b3952] shadow-2xl overflow-hidden">
+      <div class="px-4 py-3 bg-[#151e2f] border-b border-[#26354b] flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center"><i class="fa-solid fa-file-zipper"></i></div>
+          <div>
+            <div class="text-xs font-bold text-white">ZIP 已建立完成</div>
+            <div class="text-[9px] text-slate-400">若瀏覽器沒有自動下載，請從這裡手動下載</div>
+          </div>
+        </div>
+        <button id="zipCenterClose" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-4 space-y-3">
+        <div class="rounded-xl bg-[#0d1422] border border-[#233148] p-3 text-[10px] space-y-1.5">
+          <div class="flex justify-between gap-3"><span class="text-slate-500">檔名</span><span id="zipReadyName" class="font-mono text-slate-200 text-right break-all"></span></div>
+          <div class="flex justify-between"><span class="text-slate-500">ZIP 大小</span><span id="zipReadySize" class="font-mono text-emerald-400"></span></div>
+          <div class="flex justify-between"><span class="text-slate-500">檔案數</span><span id="zipReadyCount" class="font-mono text-indigo-300"></span></div>
+        </div>
+
+        <a id="zipManualDownloadLink" href="#" download class="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-black flex items-center justify-center gap-2 shadow-lg">
+          <i class="fa-solid fa-download"></i> 手動下載 ZIP
+        </a>
+
+        <div class="grid grid-cols-2 gap-2">
+          <button id="zipSaveAsBtn" class="py-2 rounded-lg bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold">
+            <i class="fa-solid fa-floppy-disk"></i> 另存新檔
+          </button>
+          <button id="zipOpenBtn" class="py-2 rounded-lg bg-[#1a2436] hover:bg-[#25334c] border border-[#334155] text-slate-200 text-[10px] font-bold">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> 開啟 ZIP
+          </button>
+        </div>
+
+        <div id="zipSupportInfo" class="text-[9px] leading-relaxed text-slate-500 bg-[#0b101b] border border-[#1f2b3e] rounded-lg p-2.5">
+          提示：若你是在預覽視窗或 iframe 中開啟工具，瀏覽器可能阻擋自動下載。建議先把 HTML 下載到電腦，用 Chrome / Edge 直接開啟，再按「手動下載 ZIP」。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 bg-[#162132] border border-indigo-500/50 text-white text-xs px-3.5 py-2 rounded-xl shadow-2xl transition transform translate-y-20 opacity-0 flex items-center gap-2">
+    <i class="fa-solid fa-circle-check text-indigo-400"></i>
+    <span id="toastMsg">通知訊息</span>
+  </div>
+
+  <script>
+    // --- Application State ---
+    const state = {
+      image: null,
+      processedCanvas: null,
+      stickers: [], // Array of { index, canvas, originalCanvas, dataUrl, main: bool, tab: bool }
+      mainIndex: 0,
+      tabIndex: 0,
+      startNumber: 1,
+      viewMode: 'grid', // 'processed', 'grid', 'split'
+      bgMode: 'checker',
+      editingIndex: -1,
+      isProcessing: false,
+      splitPercent: 50,
+      cols: 5,
+      rows: 4,
+      pendingZipBlob: null,
+      pendingZipUrl: null,
+      pendingZipFilename: null,
+      cellAdjustments: [], // per-cell PRE-SLICE source offsets: {x,y}
+      slicingFinalized: false,
+      modalPhase: 'preslice', // 'preslice' or 'eraser'
+      isDraggingSlice: false,
+      sliceDragStartX: 0,
+      sliceDragStartY: 0,
+      sliceDragBaseX: 0,
+      sliceDragBaseY: 0
+    };
+
+    // DOM References
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const loadSampleBtn = document.getElementById('loadSampleBtn');
+    const emptySampleBtn = document.getElementById('emptySampleBtn');
+    const emptyState = document.getElementById('emptyState');
+    const canvasWrapper = document.getElementById('canvasWrapper');
+    const mainCanvas = document.getElementById('mainCanvas');
+    const originalCanvas = document.getElementById('originalCanvas');
+    const splitOverlay = document.getElementById('splitOverlay');
+    const splitDivider = document.getElementById('splitDivider');
+    const gridSvg = document.getElementById('gridSvg');
+    const loadingBadge = document.getElementById('loadingBadge');
+    const stickersGrid = document.getElementById('stickersGrid');
+    const stickerCountBadge = document.getElementById('stickerCountBadge');
+    const exportAllZipBtn = document.getElementById('exportAllZipBtn');
+    const mainIconPreview = document.getElementById('mainIconPreview');
+    const tabIconPreview = document.getElementById('tabIconPreview');
+    const reprocessBtn = document.getElementById('reprocessBtn');
+    const summaryCount = document.getElementById('summaryCount');
+    const summaryMain = document.getElementById('summaryMain');
+    const summaryTab = document.getElementById('summaryTab');
+
+    // Controls
+    const keyColorInput = document.getElementById('keyColorInput');
+    const keyColorDisplay = document.getElementById('keyColorDisplay');
+    const keyColorVal = document.getElementById('keyColorVal');
+    const thresholdSlider = document.getElementById('thresholdSlider');
+    const threshVal = document.getElementById('threshVal');
+    const smoothnessSlider = document.getElementById('smoothnessSlider');
+    const smoothVal = document.getElementById('smoothVal');
+    const erosionSlider = document.getElementById('erosionSlider');
+    const erosionVal = document.getElementById('erosionVal');
+    const cleanHolesToggle = document.getElementById('cleanHolesToggle');
+    const despillToggle = document.getElementById('despillToggle');
+    const colsInput = document.getElementById('colsInput');
+    const rowsInput = document.getElementById('rowsInput');
+    const paddingSlider = document.getElementById('paddingSlider');
+    const paddingVal = document.getElementById('paddingVal');
+
+    // Simulator
+    const tabListBtn = document.getElementById('tabListBtn');
+    const tabSimBtn = document.getElementById('tabSimBtn');
+    const galleryContainer = document.getElementById('galleryContainer');
+    const simulatorContainer = document.getElementById('simulatorContainer');
+    const simCurrentSticker = document.getElementById('simCurrentSticker');
+    const simKeyboardGrid = document.getElementById('simKeyboardGrid');
+
+    // Modal
+    const editorModal = document.getElementById('editorModal');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+    const modalCanvas = document.getElementById('modalCanvas');
+    const modalTitle = document.getElementById('modalTitle');
+    const brushSizeSlider = document.getElementById('brushSizeSlider');
+    const brushSizeVal = document.getElementById('brushSizeVal');
+    const modalResetBtn = document.getElementById('modalResetBtn');
+    const modalSaveBtn = document.getElementById('modalSaveBtn');
+    const modalSetMainBtn = document.getElementById('modalSetMainBtn');
+    const modalSetTabBtn = document.getElementById('modalSetTabBtn');
+    const preSliceControls = document.getElementById('preSliceControls');
+    const eraserToolbar = document.getElementById('eraserToolbar');
+    const modalGuideText = document.getElementById('modalGuideText');
+    const sliceOffsetXSlider = document.getElementById('sliceOffsetXSlider');
+    const sliceOffsetYSlider = document.getElementById('sliceOffsetYSlider');
+    const sliceOffsetXVal = document.getElementById('sliceOffsetXVal');
+    const sliceOffsetYVal = document.getElementById('sliceOffsetYVal');
+    const resetSliceOffsetBtn = document.getElementById('resetSliceOffsetBtn');
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      toastMsg.textContent = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2500);
+    }
+
+    function hexToRgb(hex) {
+      const sanitized = hex.replace('#', '');
+      const bigint = parseInt(sanitized, 16);
+      return {
+        r: (bigint >> 16) & 255,
+        g: (bigint >> 8) & 255,
+        b: bigint & 255
+      };
+    }
+
+    /**
+     * Highly precise chroma check that strictly targets screen background green
+     * and guards characters/text containing green (e.g. "揮手", "爬山中", trees, props).
+     */
+    function isChromaGreen(r, g, b, targetRgb, tolerance) {
+      // Must have strong green dominance over red and blue
+      const maxRB = Math.max(r, b);
+      const greenDiff = g - maxRB;
+      if (greenDiff < 28) return false;
+
+      // Color distance strictly weighted toward green background
+      const dr = r - targetRgb.r;
+      const dg = g - targetRgb.g;
+      const db = b - targetRgb.b;
+      const dist = Math.sqrt(dr * dr * 0.25 + dg * dg * 0.6 + db * db * 0.15);
+
+      return dist < tolerance * 1.5;
+    }
+
+    /**
+     * Advanced Background Removal Engine with Strict Topological Protection:
+     * 1. Auto-detects corner chroma background color.
+     * 2. Outer perimeter flood fill to eliminate background without touching inner artwork.
+     * 3. Text and Object Contour Guard: Any green region enclosed by dark text strokes
+     *    (like "揮手", "爬山中") is protected from hole deletion.
+     * 4. Safe Despill only targeting white border edges.
+     */
+    function processChromaKey(sourceImg, targetColorHex, tolerance, shouldCleanHoles, despill, erosion) {
+      const width = sourceImg.naturalWidth || sourceImg.width;
+      const height = sourceImg.naturalHeight || sourceImg.height;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(sourceImg, 0, 0, width, height);
+
+      const imgData = ctx.getImageData(0, 0, width, height);
+      const data = imgData.data;
+      const totalPixels = width * height;
+
+      // Auto-sample true background color from image corners for precision
+      let bgR = 0, bgG = 0, bgB = 0;
+      const sampleCoords = [
+        [2, 2], [width - 3, 2], [2, height - 3], [width - 3, height - 3]
+      ];
+      sampleCoords.forEach(([sx, sy]) => {
+        const sIdx = (sy * width + sx) * 4;
+        bgR += data[sIdx];
+        bgG += data[sIdx + 1];
+        bgB += data[sIdx + 2];
+      });
+      const targetRgb = {
+        r: Math.round(bgR / 4),
+        g: Math.round(bgG / 4),
+        b: Math.round(bgB / 4)
+      };
+
+      // Status: 0 = unvisited, 1 = exterior background (transparent), 2 = protected foreground
+      const status = new Uint8Array(totalPixels);
+      const queue = new Int32Array(totalPixels);
+      let head = 0;
+      let tail = 0;
+
+      function checkChroma(idx) {
+        return isChromaGreen(data[idx], data[idx + 1], data[idx + 2], targetRgb, tolerance);
+      }
+
+      // Step 1: Seed outer image borders (Top, Bottom, Left, Right edges)
+      for (let x = 0; x < width; x++) {
+        const top = x;
+        const btm = (height - 1) * width + x;
+        if (checkChroma(top * 4)) {
+          status[top] = 1;
+          queue[tail++] = top;
+        }
+        if (checkChroma(btm * 4)) {
+          status[btm] = 1;
+          queue[tail++] = btm;
+        }
+      }
+
+      for (let y = 0; y < height; y++) {
+        const left = y * width;
+        const right = y * width + (width - 1);
+        if (status[left] === 0 && checkChroma(left * 4)) {
+          status[left] = 1;
+          queue[tail++] = left;
+        }
+        if (status[right] === 0 && checkChroma(right * 4)) {
+          status[right] = 1;
+          queue[tail++] = right;
+        }
+      }
+
+      // BFS flood fill outer background - stops dead at the sticker's white outer die-cut border
+      while (head < tail) {
+        const curr = queue[head++];
+        const cx = curr % width;
+        const cy = (curr / width) | 0;
+
+        const neighbors = [
+          cx > 0 ? curr - 1 : -1,
+          cx < width - 1 ? curr + 1 : -1,
+          cy > 0 ? curr - width : -1,
+          cy < height - 1 ? curr + width : -1
+        ];
+
+        for (let i = 0; i < 4; i++) {
+          const n = neighbors[i];
+          if (n !== -1 && status[n] === 0 && checkChroma(n * 4)) {
+            status[n] = 1;
+            queue[tail++] = n;
+          }
+        }
+      }
+
+      // Step 2: Safe Enclosed Hole Clearing with Black Stroke Protection
+      if (shouldCleanHoles) {
+        for (let i = 0; i < totalPixels; i++) {
+          if (status[i] === 0 && checkChroma(i * 4)) {
+            let regionTail = 0;
+            const regionQueue = new Int32Array(80000);
+            regionQueue[regionTail++] = i;
+            status[i] = 3; // temporary marked
+
+            let rHead = 0;
+            let touchesTextStroke = false;
+            let touchesWhiteBorder = false;
+            let sumColorDiff = 0;
+
+            while (rHead < regionTail) {
+              const rCurr = regionQueue[rHead++];
+              const rx = rCurr % width;
+              const ry = (rCurr / width) | 0;
+              const pIdx = rCurr * 4;
+
+              // Calculate color diff against corner green
+              const dG = Math.abs(data[pIdx + 1] - targetRgb.g);
+              sumColorDiff += dG;
+
+              const rNeighbors = [
+                rx > 0 ? rCurr - 1 : -1,
+                rx < width - 1 ? rCurr + 1 : -1,
+                ry > 0 ? rCurr - width : -1,
+                ry < height - 1 ? rCurr + width : -1
+              ];
+
+              for (let k = 0; k < 4; k++) {
+                const rn = rNeighbors[k];
+                if (rn !== -1) {
+                  if (status[rn] === 0 && checkChroma(rn * 4)) {
+                    if (regionTail < regionQueue.length) {
+                      status[rn] = 3;
+                      regionQueue[regionTail++] = rn;
+                    }
+                  } else if (status[rn] !== 3) {
+                    // Check bordering pixels
+                    const nIdx = rn * 4;
+                    const nr = data[nIdx], ng = data[nIdx + 1], nb = data[nIdx + 2];
+                    const lum = 0.299 * nr + 0.587 * ng + 0.114 * nb;
+                    // If it touches a dark stroke (e.g. text outline of '揮手', '爬山中'), it's text/art!
+                    if (lum < 60) {
+                      touchesTextStroke = true;
+                    }
+                    if (nr > 190 && ng > 190 && nb > 190) {
+                      touchesWhiteBorder = true;
+                    }
+                  }
+                }
+              }
+            }
+
+            const avgColorDiff = regionTail > 0 ? sumColorDiff / regionTail : 999;
+
+            // Only clear as background if it DOES NOT touch text stroke AND color is pure background green
+            const isSafeHole = !touchesTextStroke && touchesWhiteBorder && avgColorDiff < 20;
+
+            for (let q = 0; q < regionTail; q++) {
+              status[regionQueue[q]] = isSafeHole ? 1 : 2;
+            }
+          }
+        }
+      }
+
+      // Step 3: Set Alpha 0 strictly for validated exterior background
+      for (let i = 0; i < totalPixels; i++) {
+        if (status[i] === 1) {
+          data[i * 4 + 3] = 0;
+        }
+      }
+
+      // Step 4: Alpha Erosion (Trim 1-3px from outer edge only)
+      if (erosion > 0) {
+        const alphaCopy = new Uint8Array(totalPixels);
+        for (let i = 0; i < totalPixels; i++) {
+          alphaCopy[i] = data[i * 4 + 3];
+        }
+
+        for (let y = 1; y < height - 1; y++) {
+          for (let x = 1; x < width - 1; x++) {
+            const idx = y * width + x;
+            if (alphaCopy[idx] > 0) {
+              if (
+                alphaCopy[idx - 1] === 0 ||
+                alphaCopy[idx + 1] === 0 ||
+                alphaCopy[idx - width] === 0 ||
+                alphaCopy[idx + width] === 0
+              ) {
+                data[idx * 4 + 3] = 0;
+              }
+            }
+          }
+        }
+      }
+
+      // Step 5: Safe Despill - ONLY targets near-white die-cut border pixels
+      if (despill) {
+        for (let i = 0; i < totalPixels; i++) {
+          if (data[i * 4 + 3] > 0) {
+            const r = data[i * 4];
+            const g = data[i * 4 + 1];
+            const b = data[i * 4 + 2];
+
+            // Only clean pixels that are basically WHITE borders with green fringe
+            if (r > 165 && b > 165 && g > Math.max(r, b)) {
+              data[i * 4 + 1] = Math.max(r, b);
+              if (r > 195 && b > 195) {
+                data[i * 4] = 255;
+                data[i * 4 + 1] = 255;
+                data[i * 4 + 2] = 255;
+              }
+            }
+          }
+        }
+      }
+
+      ctx.putImageData(imgData, 0, 0);
+      return canvas;
+    }
+
+    /**
+     * Ensure every grid cell has its own PRE-SLICE source offset.
+     * These offsets move the sampling rectangle on the master sheet BEFORE cropping.
+     */
+    function ensureCellAdjustments(reset = false) {
+      const count = state.cols * state.rows;
+      if (reset || state.cellAdjustments.length !== count) {
+        state.cellAdjustments = Array.from({ length: count }, () => ({ x: 0, y: 0 }));
+      }
+    }
+
+    function getCellSourceRect(index, processedCanvas = state.processedCanvas) {
+      const fullW = processedCanvas.width;
+      const fullH = processedCanvas.height;
+      const cellW = fullW / state.cols;
+      const cellH = fullH / state.rows;
+      const c = index % state.cols;
+      const r = Math.floor(index / state.cols);
+      const adj = state.cellAdjustments[index] || { x: 0, y: 0 };
+      const sampleW = Math.min(fullW, Math.ceil(cellW));
+      const sampleH = Math.min(fullH, Math.ceil(cellH));
+      const maxX = Math.max(0, fullW - sampleW);
+      const maxY = Math.max(0, fullH - sampleH);
+      const x = Math.max(0, Math.min(maxX, Math.round(c * cellW + adj.x)));
+      const y = Math.max(0, Math.min(maxY, Math.round(r * cellH + adj.y)));
+      return { x, y, w: sampleW, h: sampleH, cellW, cellH, c, r };
+    }
+
+    /**
+     * Produce ONE 370×320 sticker from the CURRENT pre-slice sampling rectangle.
+     * This is used both for preview and final slicing.
+     */
+    function sliceSingleSticker(processedCanvas, index, padding) {
+      const rect = getCellSourceRect(index, processedCanvas);
+      const pCtx = processedCanvas.getContext('2d', { willReadFrequently: true });
+      const cellData = pCtx.getImageData(rect.x, rect.y, rect.w, rect.h);
+      const cData = cellData.data;
+
+      let minX = rect.w, minY = rect.h, maxX = 0, maxY = 0;
+      let hasContent = false;
+      for (let py = 0; py < rect.h; py++) {
+        for (let px = 0; px < rect.w; px++) {
+          const alpha = cData[(py * rect.w + px) * 4 + 3];
+          if (alpha > 15) {
+            hasContent = true;
+            if (px < minX) minX = px;
+            if (px > maxX) maxX = px;
+            if (py < minY) minY = py;
+            if (py > maxY) maxY = py;
+          }
+        }
+      }
+
+      const targetW = 370, targetH = 320;
+      const outCanvas = document.createElement('canvas');
+      outCanvas.width = targetW; outCanvas.height = targetH;
+      const outCtx = outCanvas.getContext('2d');
+      outCtx.imageSmoothingEnabled = true;
+      outCtx.imageSmoothingQuality = 'high';
+
+      if (hasContent) {
+        const cropW = Math.max(1, maxX - minX + 1);
+        const cropH = Math.max(1, maxY - minY + 1);
+        const availW = targetW - padding * 2;
+        const availH = targetH - padding * 2;
+        const scale = Math.min(availW / cropW, availH / cropH, 1.0);
+        const drawW = Math.round(cropW * scale);
+        const drawH = Math.round(cropH * scale);
+        const drawX = Math.round((targetW - drawW) / 2);
+        const drawY = Math.round((targetH - drawH) / 2);
+        outCtx.drawImage(processedCanvas,
+          rect.x + minX, rect.y + minY, cropW, cropH,
+          drawX, drawY, drawW, drawH);
+      }
+
+      const originalCopy = document.createElement('canvas');
+      originalCopy.width = targetW; originalCopy.height = targetH;
+      originalCopy.getContext('2d').drawImage(outCanvas, 0, 0);
+
+      return {
+        index,
+        canvas: outCanvas,
+        originalCanvas: originalCopy,
+        dataUrl: outCanvas.toDataURL('image/png'),
+        main: index === state.mainIndex,
+        tab: index === state.tabIndex,
+        sourceOffsetX: (state.cellAdjustments[index] || {x:0}).x || 0,
+        sourceOffsetY: (state.cellAdjustments[index] || {y:0}).y || 0
+      };
+    }
+
+    /**
+     * Build preview/final sticker array using PRE-SLICE per-cell source offsets.
+     */
+    function sliceIntoLineStickers(processedCanvas, cols, rows, padding) {
+      ensureCellAdjustments(false);
+      const stickers = [];
+      for (let i = 0; i < cols * rows; i++) {
+        stickers.push(sliceSingleSticker(processedCanvas, i, padding));
+      }
+      return stickers;
+    }
+
+    /**
+     * Renders sticker list matching user screenshot layout:
+     * - Top badges: Main 封面 (green) / Tab 標籤 (cyan)
+     * - Middle: filename (01.png) + 微調橡皮擦 button
+     * - Bottom: ★ Main + 🏷 Tab
+     */
+    function renderStickerGallery() {
+      stickersGrid.innerHTML = '';
+      simKeyboardGrid.innerHTML = '';
+      stickerCountBadge.textContent = state.stickers.length;
+      summaryCount.textContent = state.stickers.length;
+      summaryMain.textContent = `#${state.mainIndex + 1}`;
+      summaryTab.textContent = `#${state.tabIndex + 1}`;
+
+      if (state.stickers.length === 0) return;
+
+      const startNum = state.startNumber;
+
+      state.stickers.forEach((sticker, i) => {
+        const fileNum = String(startNum + i).padStart(2, '0');
+        const fileName = `${fileNum}.png`;
+
+        const card = document.createElement('div');
+        card.className = `p-2 rounded-xl bg-[#141b2a] border transition ${
+          sticker.main ? 'border-emerald-500 shadow-md shadow-emerald-950/50' : sticker.tab ? 'border-cyan-500 shadow-md shadow-cyan-950/50' : 'border-[#222e42] hover:border-[#2f3f58]'
+        } flex flex-col items-center relative`;
+
+        // Main & Tab badges
+        let badgesHtml = '';
+        if (sticker.main || sticker.tab) {
+          badgesHtml = '<div class="absolute top-2.5 left-2.5 flex items-center gap-1 z-10">';
+          if (sticker.main) badgesHtml += '<span class="bg-emerald-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow">Main 封面</span>';
+          if (sticker.tab) badgesHtml += '<span class="bg-cyan-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow">Tab 標籤</span>';
+          badgesHtml += '</div>';
+        }
+
+        card.innerHTML = `
+          ${badgesHtml}
+          <!-- Thumbnail -->
+          <div class="w-full aspect-[370/320] rounded-lg bg-checker overflow-hidden cursor-pointer relative group flex items-center justify-center border border-[#1f2b3e]">
+            <img src="${sticker.dataUrl}" class="w-full h-full object-contain p-1" alt="${fileName}">
+            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+              <span class="text-[9px] bg-white text-slate-900 px-2 py-0.5 rounded font-bold shadow">${state.slicingFinalized ? '點擊修容' : '點擊切割對位'}</span>
+            </div>
+          </div>
+
+          <!-- Middle Row: Filename & 微調橡皮擦 -->
+          <div class="w-full flex items-center justify-between mt-1.5 px-0.5">
+            <span class="text-[10px] font-mono font-bold text-slate-300">${fileName}</span>
+            <button class="open-eraser-btn text-[9px] text-indigo-300 hover:text-white bg-[#1d273a] hover:bg-[#2a3854] border border-[#2c3b54] px-1.5 py-0.5 rounded transition flex items-center gap-1" data-index="${i}">
+              <i class="fa-solid ${state.slicingFinalized ? 'fa-eraser' : 'fa-crop-simple'} text-[8px]"></i> ${state.slicingFinalized ? '微調橡皮擦' : '切割前對位'}
+            </button>
+          </div>
+
+          <!-- Bottom Row: ★ Main & 🏷 Tab buttons -->
+          <div class="grid grid-cols-2 gap-1 w-full mt-1.5">
+            <button class="set-main-btn text-[9px] py-1 rounded font-semibold transition flex items-center justify-center gap-1 ${
+              sticker.main ? 'bg-emerald-600 text-white font-bold' : 'bg-[#182335] text-slate-300 hover:bg-[#24334d]'
+            }" data-index="${i}">
+              <i class="fa-solid fa-star text-[8px]"></i> Main
+            </button>
+            <button class="set-tab-btn text-[9px] py-1 rounded font-semibold transition flex items-center justify-center gap-1 ${
+              sticker.tab ? 'bg-cyan-600 text-white font-bold' : 'bg-[#182335] text-slate-300 hover:bg-[#24334d]'
+            }" data-index="${i}">
+              <i class="fa-solid fa-tag text-[8px]"></i> Tab
+            </button>
+          </div>
+        `;
+
+        card.querySelector('.aspect-\\[370\\/320\\]').addEventListener('click', () => openEditorModal(i));
+        card.querySelector('.open-eraser-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          state.slicingFinalized ? openEditorModal(i) : openPreSliceEditor(i);
+        });
+
+        card.querySelector('.set-main-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          setMainSticker(i);
+        });
+
+        card.querySelector('.set-tab-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          setTabSticker(i);
+        });
+
+        stickersGrid.appendChild(card);
+
+        // Simulator Keyboard item
+        const keyItem = document.createElement('div');
+        keyItem.className = 'aspect-square bg-[#131b29] hover:bg-[#1f2c41] rounded p-1 cursor-pointer flex items-center justify-center border border-[#1d293d] transition';
+        keyItem.innerHTML = `<img src="${sticker.dataUrl}" class="w-full h-full object-contain">`;
+        keyItem.addEventListener('click', () => {
+          simCurrentSticker.src = sticker.dataUrl;
+        });
+        simKeyboardGrid.appendChild(keyItem);
+      });
+
+      updateSpecialAssetsPreviews();
+    }
+
+    function updateSpecialAssetsPreviews() {
+      if (state.stickers.length === 0) return;
+
+      const mainSticker = state.stickers[state.mainIndex] || state.stickers[0];
+      const tabSticker = state.stickers[state.tabIndex] || state.stickers[0];
+
+      // Render main.png (240x240)
+      const mCanvas = document.createElement('canvas');
+      mCanvas.width = 240;
+      mCanvas.height = 240;
+      mCanvas.getContext('2d').drawImage(mainSticker.canvas, 10, 10, 220, 220);
+      mainIconPreview.src = mCanvas.toDataURL('image/png');
+
+      // Render tab.png (96x74)
+      const tCanvas = document.createElement('canvas');
+      tCanvas.width = 96;
+      tCanvas.height = 74;
+      tCanvas.getContext('2d').drawImage(tabSticker.canvas, 4, 4, 88, 66);
+      tabIconPreview.src = tCanvas.toDataURL('image/png');
+
+      if (!simCurrentSticker.src || simCurrentSticker.src.endsWith('#')) {
+        simCurrentSticker.src = mainSticker.dataUrl;
+      }
+    }
+
+    function setMainSticker(idx) {
+      state.mainIndex = idx;
+      state.stickers.forEach((s, i) => s.main = (i === idx));
+      renderStickerGallery();
+      showToast(`已將 #${idx + 1} 設為 main.png 封面！`);
+    }
+
+    function setTabSticker(idx) {
+      state.tabIndex = idx;
+      state.stickers.forEach((s, i) => s.tab = (i === idx));
+      renderStickerGallery();
+      showToast(`已將 #${idx + 1} 設為 tab.png 標籤！`);
+    }
+
+    /**
+     * Draws cutting grid overlay lines with #1 ~ #20 badges at top-left of each cell
+     */
+    function renderGridOverlay(cols, rows, width, height) {
+      gridSvg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      gridSvg.innerHTML = '';
+
+      const cellW = width / cols;
+      const cellH = height / rows;
+      ensureCellAdjustments(false);
+
+      // Base reference grid (where AI was expected to place each sticker)
+      for (let c = 1; c < cols; c++) {
+        const x = c * cellW;
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', x); line.setAttribute('y1', 0);
+        line.setAttribute('x2', x); line.setAttribute('y2', height);
+        line.setAttribute('stroke', '#6366f1'); line.setAttribute('stroke-width', '2');
+        line.setAttribute('stroke-dasharray', '6,6');
+        gridSvg.appendChild(line);
+      }
+      for (let r = 1; r < rows; r++) {
+        const y = r * cellH;
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', 0); line.setAttribute('y1', y);
+        line.setAttribute('x2', width); line.setAttribute('y2', y);
+        line.setAttribute('stroke', '#6366f1'); line.setAttribute('stroke-width', '2');
+        line.setAttribute('stroke-dasharray', '6,6');
+        gridSvg.appendChild(line);
+      }
+
+      // Clickable PRE-SLICE sampling rectangles. Amber = user shifted this cell.
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const index = r * cols + c;
+          const rectInfo = getCellSourceRect(index, state.processedCanvas);
+          const adj = state.cellAdjustments[index] || {x:0,y:0};
+
+          const hit = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          hit.setAttribute('x', rectInfo.x);
+          hit.setAttribute('y', rectInfo.y);
+          hit.setAttribute('width', rectInfo.w);
+          hit.setAttribute('height', rectInfo.h);
+          hit.setAttribute('fill', 'rgba(99,102,241,0.001)');
+          hit.setAttribute('stroke', (adj.x || adj.y) ? '#f59e0b' : 'rgba(99,102,241,0.22)');
+          hit.setAttribute('stroke-width', (adj.x || adj.y) ? '4' : '1');
+          hit.style.pointerEvents = 'all';
+          hit.style.cursor = 'pointer';
+          hit.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openPreSliceEditor(index);
+          });
+          gridSvg.appendChild(hit);
+
+          const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          text.setAttribute('x', rectInfo.x + 12);
+          text.setAttribute('y', rectInfo.y + 24);
+          text.setAttribute('fill', (adj.x || adj.y) ? '#fbbf24' : 'rgba(255,255,255,0.65)');
+          text.setAttribute('font-size', '16');
+          text.setAttribute('font-weight', 'bold');
+          text.setAttribute('font-family', 'monospace');
+          text.setAttribute('pointer-events', 'none');
+          text.textContent = `#${index + 1}${(adj.x || adj.y) ? ' ✥' : ''}`;
+          gridSvg.appendChild(text);
+        }
+      }
+    }
+
+    /**
+     * Executes Chroma Keying and Slicing pipeline
+     */
+    function updateSlicingWorkflowUI() {
+      if (!state.image) {
+        exportAllZipBtn.disabled = true;
+        return;
+      }
+      if (state.slicingFinalized) {
+        exportAllZipBtn.disabled = false;
+        reprocessBtn.innerHTML = '<i class="fa-solid fa-crop-simple"></i> 重新對位';
+        reprocessBtn.className = 'text-[10px] text-amber-300 hover:text-white bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 px-2 py-0.5 rounded transition flex items-center gap-1 shadow-sm';
+      } else {
+        exportAllZipBtn.disabled = true;
+        reprocessBtn.innerHTML = '<i class="fa-solid fa-scissors"></i> 確認切圖';
+        reprocessBtn.className = 'text-[10px] text-emerald-300 hover:text-white bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 px-2 py-0.5 rounded transition flex items-center gap-1 shadow-sm';
+      }
+    }
+
+    function enterPreSliceMode(showMsg = true) {
+      if (!state.image) return;
+      state.slicingFinalized = false;
+      state.viewMode = 'grid';
+      updateViewMode('grid');
+      updateSlicingWorkflowUI();
+      renderStickerGallery();
+      if (showMsg) showToast('已回到分割前對位：點網格或右側「切割前對位」調整每格來源位置');
+    }
+
+    function finalizeSlicing() {
+      if (!state.processedCanvas) return;
+      const padding = parseInt(paddingSlider.value) || 10;
+      state.stickers = sliceIntoLineStickers(state.processedCanvas, state.cols, state.rows, padding);
+      state.slicingFinalized = true;
+      renderStickerGallery();
+      renderGridOverlay(state.cols, state.rows, state.processedCanvas.width, state.processedCanvas.height);
+      updateSlicingWorkflowUI();
+      showToast('切圖已確認！現在可做橡皮擦修容、Main/Tab 指定與 ZIP 匯出');
+    }
+
+    function runProcessingPipeline(options = {}) {
+      if (!state.image) return;
+      const resetAdjustments = !!options.resetAdjustments;
+
+      loadingBadge.classList.remove('hidden');
+      state.isProcessing = true;
+
+      setTimeout(() => {
+        const tolerance = parseInt(thresholdSlider.value);
+        const keyColor = keyColorInput.value;
+        const cleanHoles = cleanHolesToggle.checked;
+        const despill = despillToggle.checked;
+        const erosion = parseInt(erosionSlider.value);
+        const cols = state.cols;
+        const rows = state.rows;
+        const padding = parseInt(paddingSlider.value) || 10;
+
+        state.processedCanvas = processChromaKey(state.image, keyColor, tolerance, cleanHoles, despill, erosion);
+        ensureCellAdjustments(resetAdjustments);
+
+        mainCanvas.width = state.processedCanvas.width;
+        mainCanvas.height = state.processedCanvas.height;
+        const ctx = mainCanvas.getContext('2d');
+        ctx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+        ctx.drawImage(state.processedCanvas, 0, 0);
+
+        originalCanvas.width = state.image.naturalWidth || state.image.width;
+        originalCanvas.height = state.image.naturalHeight || state.image.height;
+        const oCtx = originalCanvas.getContext('2d');
+        oCtx.drawImage(state.image, 0, 0);
+
+        // IMPORTANT: these are PREVIEW slices only. User can shift each sampling rectangle first.
+        state.stickers = sliceIntoLineStickers(state.processedCanvas, cols, rows, padding);
+        state.slicingFinalized = false;
+
+        renderGridOverlay(cols, rows, state.processedCanvas.width, state.processedCanvas.height);
+        renderStickerGallery();
+        updateSlicingWorkflowUI();
+
+        loadingBadge.classList.add('hidden');
+        state.isProcessing = false;
+        state.viewMode = 'grid';
+        updateViewMode('grid');
+      }, 40);
+    }
+
+    /**
+     * Generates the 20 Gecko Sticker Sheet matching user screenshot captions:
+     * 讚啦!、隨便啦、好吃!、好熱喔、放假囉、
+     * 氣死我了、想家了、想睡、真的假的?、尷尬...、
+     * 沒問題!、出發囉!、去旅行!、手搖必喝、加油啊!、
+     * 累爆了、發財啦、愛你喔、幫我看看、對不起啦
+     */
+    function loadGeckoSample() {
+      loadingBadge.classList.remove('hidden');
+      const canvas = document.createElement('canvas');
+      canvas.width = 2560;
+      canvas.height = 1664;
+      const ctx = canvas.getContext('2d');
+
+      // Fill Pure Chroma Key Green Background (#07F40E)
+      ctx.fillStyle = '#07F40E';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const captions = [
+        '讚啦!', '隨便啦', '好吃!', '好熱喔', '放假囉',
+        '氣死我了', '想家了', '想睡', '真的假的?', '尷尬...',
+        '沒問題!', '出發囉!', '去旅行!', '手搖必喝', '加油啊!',
+        '累爆了', '發財啦', '愛你喔', '幫我看看', '對不起啦'
+      ];
+
+      const colors = [
+        '#F59E0B', '#A855F7', '#EF4444', '#06B6D4', '#10B981',
+        '#DC2626', '#3B82F6', '#8B5CF6', '#F59E0B', '#EC4899',
+        '#0EA5E9', '#F97316', '#14B8A6', '#D97706', '#2563EB',
+        '#6B7280', '#EAB308', '#F43F5E', '#0284C7', '#E11D48'
+      ];
+
+      const cols = 5;
+      const rows = 4;
+      const cellW = canvas.width / cols;
+      const cellH = canvas.height / rows;
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const idx = r * cols + c;
+          const cx = c * cellW + cellW / 2;
+          const cy = r * cellH + cellH / 2;
+
+          ctx.save();
+          ctx.translate(cx, cy);
+
+          // 1. Thick Single Merged White Die-Cut Silhouette
+          ctx.fillStyle = '#FFFFFF';
+          ctx.beginPath();
+          ctx.roundRect(-195, -145, 390, 290, 52);
+          ctx.fill();
+
+          // 2. Black thin inner outline
+          ctx.lineWidth = 6;
+          ctx.strokeStyle = '#1e293b';
+          ctx.stroke();
+
+          // 3. Cute 3D Leopard Gecko Body
+          ctx.fillStyle = '#FDE047'; // bright gecko skin
+          ctx.beginPath();
+          ctx.ellipse(0, 38, 85, 70, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.lineWidth = 4;
+          ctx.strokeStyle = '#854D0E';
+          ctx.stroke();
+
+          // Spots on Gecko
+          ctx.fillStyle = '#713F12';
+          const spots = [[-35, 10, 8], [30, 20, 10], [0, -10, 7], [-15, 30, 9], [15, 45, 8], [-40, 45, 7], [45, 40, 8]];
+          spots.forEach(([sx, sy, sr]) => {
+            ctx.beginPath();
+            ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+            ctx.fill();
+          });
+
+          // Big 3D Pop Mart Glass Eyes
+          ctx.fillStyle = '#0f172a';
+          ctx.beginPath();
+          ctx.arc(-42, 28, 20, 0, Math.PI * 2);
+          ctx.arc(42, 28, 20, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Catchlights
+          ctx.fillStyle = '#FFFFFF';
+          ctx.beginPath();
+          ctx.arc(-46, 22, 7, 0, Math.PI * 2);
+          ctx.arc(38, 22, 7, 0, Math.PI * 2);
+          ctx.arc(-38, 33, 3, 0, Math.PI * 2);
+          ctx.arc(46, 33, 3, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Rosy Cheeks
+          ctx.fillStyle = 'rgba(244, 63, 94, 0.4)';
+          ctx.beginPath();
+          ctx.arc(-55, 50, 13, 0, Math.PI * 2);
+          ctx.arc(55, 50, 13, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Cute Smile / Expression
+          ctx.strokeStyle = '#713F12';
+          ctx.lineWidth = 4.5;
+          ctx.beginPath();
+          ctx.arc(0, 52, 20, 0.15 * Math.PI, 0.85 * Math.PI, false);
+          ctx.stroke();
+
+          // 4. Large Typography Banner
+          const text = captions[idx];
+          const textColor = colors[idx];
+
+          ctx.font = '900 42px "Noto Sans TC", sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+
+          // Outer white stroke
+          ctx.lineWidth = 14;
+          ctx.strokeStyle = '#FFFFFF';
+          ctx.strokeText(text, 0, -85);
+
+          // Black border
+          ctx.lineWidth = 7;
+          ctx.strokeStyle = '#0f172a';
+          ctx.strokeText(text, 0, -85);
+
+          // Vivid fill
+          ctx.fillStyle = textColor;
+          ctx.fillText(text, 0, -85);
+
+          ctx.restore();
+        }
+      }
+
+      const img = new Image();
+      img.onload = () => {
+        state.image = img;
+        emptyState.classList.add('hidden');
+        canvasWrapper.classList.remove('hidden');
+        runProcessingPipeline({ resetAdjustments: true });
+        showToast('範例已載入：請先檢查網格對位，再確認切圖');
+      };
+      img.src = canvas.toDataURL('image/png');
+    }
+
+    // Modal Fine-Tuning Eraser
+    let isDrawing = false;
+    let modalMode = 'erase'; // 'erase' or 'restore'
+
+    const modalToolEraser = document.getElementById('modalToolEraser');
+    const modalToolRestore = document.getElementById('modalToolRestore');
+
+    if (modalToolEraser && modalToolRestore) {
+      modalToolEraser.addEventListener('click', () => {
+        modalMode = 'erase';
+        modalToolEraser.className = 'px-2 py-0.5 rounded text-[9px] font-bold bg-indigo-600 text-white transition flex items-center gap-1';
+        modalToolRestore.className = 'px-2 py-0.5 rounded text-[9px] font-semibold text-slate-400 hover:text-white transition flex items-center gap-1';
+      });
+      modalToolRestore.addEventListener('click', () => {
+        modalMode = 'restore';
+        modalToolRestore.className = 'px-2 py-0.5 rounded text-[9px] font-bold bg-indigo-600 text-white transition flex items-center gap-1';
+        modalToolEraser.className = 'px-2 py-0.5 rounded text-[9px] font-semibold text-slate-400 hover:text-white transition flex items-center gap-1';
+      });
+    }
+
+    function configureModalPhase(phase) {
+      state.modalPhase = phase;
+      const isPre = phase === 'preslice';
+      preSliceControls.classList.toggle('hidden', !isPre);
+      eraserToolbar.classList.toggle('hidden', isPre);
+      modalSetMainBtn.classList.toggle('hidden', isPre);
+      modalSetTabBtn.classList.toggle('hidden', isPre);
+      modalCanvas.className = `w-full h-full object-contain ${isPre ? 'cursor-move' : 'cursor-crosshair'}`;
+      modalGuideText.textContent = isPre
+        ? '先修正這一格在母圖上的來源取樣位置。拖曳預覽或調整 Source X / Y，讓人物與文字完整落在同一格後，再確認切圖。'
+        : '切圖確認後才進入橡皮擦修容。若有少數邊角雜點，可用橡皮擦清除，再儲存微調。';
+      modalSaveBtn.innerHTML = isPre
+        ? '<i class="fa-solid fa-check"></i> 套用此格對位'
+        : '<i class="fa-solid fa-check"></i> 儲存微調';
+    }
+
+    function refreshPreSliceModalPreview() {
+      if (state.editingIndex < 0 || !state.processedCanvas) return;
+      const padding = parseInt(paddingSlider.value) || 10;
+      const previewSticker = sliceSingleSticker(state.processedCanvas, state.editingIndex, padding);
+      const ctx = modalCanvas.getContext('2d');
+      ctx.clearRect(0, 0, 370, 320);
+      ctx.drawImage(previewSticker.canvas, 0, 0);
+      // also refresh the card preview for immediate feedback
+      state.stickers[state.editingIndex] = previewSticker;
+    }
+
+    function openPreSliceEditor(index) {
+      if (!state.processedCanvas) return;
+      state.editingIndex = index;
+      state.slicingFinalized = false;
+      updateSlicingWorkflowUI();
+      configureModalPhase('preslice');
+
+      const fileNum = String(state.startNumber + index).padStart(2, '0');
+      modalTitle.textContent = `分割前對位 - ${fileNum}.png`;
+
+      const rect = getCellSourceRect(index, state.processedCanvas);
+      const adj = state.cellAdjustments[index] || { x: 0, y: 0 };
+      const maxX = Math.max(10, Math.floor(rect.cellW * 0.45));
+      const maxY = Math.max(10, Math.floor(rect.cellH * 0.45));
+      sliceOffsetXSlider.min = -maxX; sliceOffsetXSlider.max = maxX;
+      sliceOffsetYSlider.min = -maxY; sliceOffsetYSlider.max = maxY;
+      sliceOffsetXSlider.value = adj.x || 0;
+      sliceOffsetYSlider.value = adj.y || 0;
+      sliceOffsetXVal.textContent = `${adj.x || 0}px`;
+      sliceOffsetYVal.textContent = `${adj.y || 0}px`;
+
+      refreshPreSliceModalPreview();
+      editorModal.classList.remove('hidden');
+    }
+
+    function openEditorModal(index) {
+      if (!state.slicingFinalized) {
+        openPreSliceEditor(index);
+        return;
+      }
+      state.editingIndex = index;
+      const sticker = state.stickers[index];
+      if (!sticker) return;
+      configureModalPhase('eraser');
+
+      const fileNum = String(state.startNumber + index).padStart(2, '0');
+      modalTitle.textContent = `微調修復畫布 - ${fileNum}.png`;
+      const ctx = modalCanvas.getContext('2d');
+      ctx.clearRect(0, 0, 370, 320);
+      ctx.drawImage(sticker.canvas, 0, 0);
+      editorModal.classList.remove('hidden');
+    }
+
+    function closeEditorModal() {
+      editorModal.classList.add('hidden');
+      state.editingIndex = -1;
+      state.isDraggingSlice = false;
+      isDrawing = false;
+    }
+
+    // PRE-SLICE sliders: change sampling window BEFORE crop.
+    sliceOffsetXSlider.addEventListener('input', (e) => {
+      if (state.editingIndex < 0) return;
+      ensureCellAdjustments(false);
+      state.cellAdjustments[state.editingIndex].x = parseInt(e.target.value) || 0;
+      sliceOffsetXVal.textContent = `${state.cellAdjustments[state.editingIndex].x}px`;
+      refreshPreSliceModalPreview();
+      renderGridOverlay(state.cols, state.rows, state.processedCanvas.width, state.processedCanvas.height);
+    });
+    sliceOffsetYSlider.addEventListener('input', (e) => {
+      if (state.editingIndex < 0) return;
+      ensureCellAdjustments(false);
+      state.cellAdjustments[state.editingIndex].y = parseInt(e.target.value) || 0;
+      sliceOffsetYVal.textContent = `${state.cellAdjustments[state.editingIndex].y}px`;
+      refreshPreSliceModalPreview();
+      renderGridOverlay(state.cols, state.rows, state.processedCanvas.width, state.processedCanvas.height);
+    });
+    resetSliceOffsetBtn.addEventListener('click', () => {
+      if (state.editingIndex < 0) return;
+      state.cellAdjustments[state.editingIndex] = { x: 0, y: 0 };
+      sliceOffsetXSlider.value = 0; sliceOffsetYSlider.value = 0;
+      sliceOffsetXVal.textContent = '0px'; sliceOffsetYVal.textContent = '0px';
+      refreshPreSliceModalPreview();
+      renderGridOverlay(state.cols, state.rows, state.processedCanvas.width, state.processedCanvas.height);
+    });
+
+    // Canvas drag: in pre-slice phase, drag the STICKER CONTENT into the desired cell.
+    modalCanvas.addEventListener('mousedown', (e) => {
+      if (state.modalPhase === 'preslice') {
+        if (state.editingIndex < 0) return;
+        state.isDraggingSlice = true;
+        state.sliceDragStartX = e.clientX;
+        state.sliceDragStartY = e.clientY;
+        const adj = state.cellAdjustments[state.editingIndex] || {x:0,y:0};
+        state.sliceDragBaseX = adj.x || 0;
+        state.sliceDragBaseY = adj.y || 0;
+        return;
+      }
+      isDrawing = true;
+      applyBrush(e);
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDrawing = false;
+      state.isDraggingSlice = false;
+    });
+
+    modalCanvas.addEventListener('mousemove', (e) => {
+      if (state.modalPhase === 'preslice' && state.isDraggingSlice) {
+        const rect = modalCanvas.getBoundingClientRect();
+        const sourceRect = getCellSourceRect(state.editingIndex, state.processedCanvas);
+        // Dragging artwork right means sampling window moves left.
+        const dx = (e.clientX - state.sliceDragStartX) * (sourceRect.cellW / rect.width);
+        const dy = (e.clientY - state.sliceDragStartY) * (sourceRect.cellH / rect.height);
+        const minX = parseInt(sliceOffsetXSlider.min), maxX = parseInt(sliceOffsetXSlider.max);
+        const minY = parseInt(sliceOffsetYSlider.min), maxY = parseInt(sliceOffsetYSlider.max);
+        const nx = Math.max(minX, Math.min(maxX, Math.round(state.sliceDragBaseX - dx)));
+        const ny = Math.max(minY, Math.min(maxY, Math.round(state.sliceDragBaseY - dy)));
+        state.cellAdjustments[state.editingIndex].x = nx;
+        state.cellAdjustments[state.editingIndex].y = ny;
+        sliceOffsetXSlider.value = nx; sliceOffsetYSlider.value = ny;
+        sliceOffsetXVal.textContent = `${nx}px`; sliceOffsetYVal.textContent = `${ny}px`;
+        refreshPreSliceModalPreview();
+        renderGridOverlay(state.cols, state.rows, state.processedCanvas.width, state.processedCanvas.height);
+        return;
+      }
+      if (state.modalPhase === 'eraser' && isDrawing) applyBrush(e);
+    });
+
+    function applyBrush(e) {
+      if (state.modalPhase !== 'eraser' || state.editingIndex < 0) return;
+      const sticker = state.stickers[state.editingIndex];
+      const rect = modalCanvas.getBoundingClientRect();
+      const scaleX = modalCanvas.width / rect.width;
+      const scaleY = modalCanvas.height / rect.height;
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
+      const radius = parseInt(brushSizeSlider.value);
+      const ctx = modalCanvas.getContext('2d');
+      ctx.save();
+      if (modalMode === 'erase') {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2, false); ctx.fill();
+      } else {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.save(); ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2, false); ctx.clip();
+        ctx.drawImage(sticker.originalCanvas, 0, 0); ctx.restore();
+      }
+      ctx.restore();
+    }
+
+    modalSaveBtn.addEventListener('click', () => {
+      if (state.editingIndex < 0) return;
+      if (state.modalPhase === 'preslice') {
+        // Save only this cell's preview. Final crop happens later via 確認切圖.
+        const padding = parseInt(paddingSlider.value) || 10;
+        state.stickers[state.editingIndex] = sliceSingleSticker(state.processedCanvas, state.editingIndex, padding);
+        renderStickerGallery();
+        renderGridOverlay(state.cols, state.rows, state.processedCanvas.width, state.processedCanvas.height);
+        closeEditorModal();
+        showToast('此格分割前對位已保存。全部調整完成後請按右側「確認切圖」');
+        return;
+      }
+
+      const sticker = state.stickers[state.editingIndex];
+      const sCtx = sticker.canvas.getContext('2d');
+      sCtx.clearRect(0, 0, 370, 320);
+      sCtx.drawImage(modalCanvas, 0, 0);
+      sticker.dataUrl = sticker.canvas.toDataURL('image/png');
+      renderStickerGallery();
+      closeEditorModal();
+      showToast('貼圖微調儲存成功！');
+    });
+
+    modalResetBtn.addEventListener('click', () => {
+      if (state.modalPhase !== 'eraser' || state.editingIndex < 0) return;
+      const sticker = state.stickers[state.editingIndex];
+      const ctx = modalCanvas.getContext('2d');
+      ctx.clearRect(0, 0, 370, 320);
+      ctx.drawImage(sticker.originalCanvas, 0, 0);
+      showToast('已還原至原始切圖');
+    });
+
+    modalSetMainBtn.addEventListener('click', () => {
+      if (state.editingIndex >= 0) setMainSticker(state.editingIndex);
+    });
+
+    modalSetTabBtn.addEventListener('click', () => {
+      if (state.editingIndex >= 0) setTabSticker(state.editingIndex);
+    });
+
+    modalCloseBtn.addEventListener('click', closeEditorModal);
+
+    // ------------------------------------------------------------------
+    // Standalone ZIP writer (STORE method, no external FileSaver required)
+    // This keeps local file:// use reliable even when CDN scripts are blocked.
+    // ------------------------------------------------------------------
+    function dataUrlToBytes(dataUrl) {
+      const base64 = dataUrl.split(',')[1] || '';
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return bytes;
+    }
+
+    const CRC32_TABLE = (() => {
+      const table = new Uint32Array(256);
+      for (let n = 0; n < 256; n++) {
+        let c = n;
+        for (let k = 8; k > 0; k--) {
+          c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+        }
+        table[n] = c >>> 0;
+      }
+      return table;
+    })();
+
+    function crc32(bytes) {
+      let c = 0xFFFFFFFF;
+      for (let i = 0; i < bytes.length; i++) c = CRC32_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+      return (c ^ 0xFFFFFFFF) >>> 0;
+    }
+
+    function u16(v) {
+      return new Uint8Array([v & 255, (v >>> 8) & 255]);
+    }
+
+    function u32(v) {
+      return new Uint8Array([v & 255, (v >>> 8) & 255, (v >>> 16) & 255, (v >>> 24) & 255]);
+    }
+
+    function concatBytes(parts) {
+      const len = parts.reduce((n, p) => n + p.length, 0);
+      const out = new Uint8Array(len);
+      let off = 0;
+      for (const part of parts) { out.set(part, off); off += part.length; }
+      return out;
+    }
+
+    function getDosDateTime(date = new Date()) {
+      const year = Math.max(1980, date.getFullYear());
+      const dosTime = ((date.getHours() & 31) << 11) | ((date.getMinutes() & 63) << 5) | ((Math.floor(date.getSeconds() / 2)) & 31);
+      const dosDate = (((year - 1980) & 127) << 9) | (((date.getMonth() + 1) & 15) << 5) | (date.getDate() & 31);
+      return { dosTime, dosDate };
+    }
+
+    function buildZipBlob(entries) {
+      const enc = new TextEncoder();
+      const locals = [];
+      const centrals = [];
+      let localOffset = 0;
+      const { dosTime, dosDate } = getDosDateTime();
+
+      for (const entry of entries) {
+        const nameBytes = enc.encode(entry.name);
+        const data = entry.bytes;
+        const crc = crc32(data);
+
+        // Local file header
+        const localHeader = concatBytes([
+          u32(0x04034b50), // signature
+          u16(20),         // version needed
+          u16(0x0800),     // UTF-8 names
+          u16(0),          // STORE - no compression
+          u16(dosTime),
+          u16(dosDate),
+          u32(crc),
+          u32(data.length),
+          u32(data.length),
+          u16(nameBytes.length),
+          u16(0),
+          nameBytes
+        ]);
+        locals.push(localHeader, data);
+
+        // Central directory entry
+        const central = concatBytes([
+          u32(0x02014b50),
+          u16(20),         // version made by
+          u16(20),         // version needed
+          u16(0x0800),
+          u16(0),
+          u16(dosTime),
+          u16(dosDate),
+          u32(crc),
+          u32(data.length),
+          u32(data.length),
+          u16(nameBytes.length),
+          u16(0), u16(0), u16(0), u16(0),
+          u32(0),
+          u32(localOffset),
+          nameBytes
+        ]);
+        centrals.push(central);
+        localOffset += localHeader.length + data.length;
+      }
+
+      const centralData = concatBytes(centrals);
+      const end = concatBytes([
+        u32(0x06054b50),
+        u16(0), u16(0),
+        u16(entries.length), u16(entries.length),
+        u32(centralData.length),
+        u32(localOffset),
+        u16(0)
+      ]);
+
+      return new Blob([...locals, centralData, end], { type: 'application/zip' });
+    }
+
+    function downloadZipDirect(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.rel = 'noopener';
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        a.remove();
+        URL.revokeObjectURL(url);
+      }, 3000);
+    }
+
+    function canvasToPngBytes(canvas) {
+      return dataUrlToBytes(canvas.toDataURL('image/png'));
+    }
+
+    function makeZipFilename() {
+      const d = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      return `LINE_stickers_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.zip`;
+    }
+
+    // ZIP Packager
+    exportAllZipBtn.addEventListener('click', async () => {
+      if (state.stickers.length === 0) {
+        showToast('目前沒有可匯出的貼圖');
+        return;
+      }
+      if (!state.slicingFinalized) {
+        showToast('請先完成「分割前對位」並按確認切圖');
+        return;
+      }
+
+      const oldHtml = exportAllZipBtn.innerHTML;
+      exportAllZipBtn.disabled = true;
+      exportAllZipBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 建立 ZIP 中...';
+
+      try {
+        const entries = [];
+        const startNum = state.startNumber;
+
+        // 01.png ~ NN.png
+        for (let i = 0; i < state.stickers.length; i++) {
+          const fileNum = String(startNum + i).padStart(2, '0');
+          entries.push({
+            name: `${fileNum}.png`,
+            bytes: dataUrlToBytes(state.stickers[i].dataUrl)
+          });
+        }
+
+        // main.png (240x240) - contain without distortion
+        const mainSticker = state.stickers[state.mainIndex] || state.stickers[0];
+        const mCanvas = document.createElement('canvas');
+        mCanvas.width = 240;
+        mCanvas.height = 240;
+        const mCtx = mCanvas.getContext('2d');
+        const mScale = Math.min(220 / mainSticker.canvas.width, 220 / mainSticker.canvas.height);
+        const mW = Math.round(mainSticker.canvas.width * mScale);
+        const mH = Math.round(mainSticker.canvas.height * mScale);
+        mCtx.drawImage(mainSticker.canvas, Math.round((240-mW)/2), Math.round((240-mH)/2), mW, mH);
+        entries.push({ name: 'main.png', bytes: canvasToPngBytes(mCanvas) });
+
+        // tab.png (96x74) - contain without distortion
+        const tabSticker = state.stickers[state.tabIndex] || state.stickers[0];
+        const tCanvas = document.createElement('canvas');
+        tCanvas.width = 96;
+        tCanvas.height = 74;
+        const tCtx = tCanvas.getContext('2d');
+        const tScale = Math.min(88 / tabSticker.canvas.width, 66 / tabSticker.canvas.height);
+        const tW = Math.round(tabSticker.canvas.width * tScale);
+        const tH = Math.round(tabSticker.canvas.height * tScale);
+        tCtx.drawImage(tabSticker.canvas, Math.round((96-tW)/2), Math.round((74-tH)/2), tW, tH);
+        entries.push({ name: 'tab.png', bytes: canvasToPngBytes(tCanvas) });
+
+        // Export a tiny manifest so the user can verify what was packed.
+        const manifest = {
+          generatedAt: new Date().toISOString(),
+          stickerCount: state.stickers.length,
+          main: `#${state.mainIndex + 1}`,
+          tab: `#${state.tabIndex + 1}`,
+          cols: state.cols,
+          rows: state.rows,
+          files: entries.map(e => e.name)
+        };
+        entries.push({ name: 'package_info.json', bytes: new TextEncoder().encode(JSON.stringify(manifest, null, 2)) });
+
+        const blob = buildZipBlob(entries);
+        const filename = makeZipFilename();
+        downloadZipDirect(blob, filename);
+        showToast(`已直接下載貼圖包：${filename}`);
+      } catch (err) {
+        console.error('ZIP export failed:', err);
+        showToast(`ZIP 建立失敗：${err && err.message ? err.message : err}`);
+      } finally {
+        exportAllZipBtn.disabled = false;
+        exportAllZipBtn.innerHTML = oldHtml;
+      }
+    });
+
+    document.getElementById('downloadMainBtn').addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = 'main.png';
+      link.href = mainIconPreview.src;
+      link.click();
+    });
+
+    document.getElementById('downloadTabBtn').addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = 'tab.png';
+      link.href = tabIconPreview.src;
+      link.click();
+    });
+
+    // View Mode Switcher
+    function updateViewMode(mode) {
+      state.viewMode = mode;
+      const activeClass = 'px-3 py-1 rounded-md text-[11px] font-semibold bg-indigo-600 text-white border border-indigo-500 transition shadow-sm';
+      const inactiveClass = 'px-3 py-1 rounded-md text-[11px] font-semibold bg-[#1a2333] text-slate-300 hover:text-white border border-transparent transition';
+
+      document.getElementById('viewProcessedBtn').className = mode === 'processed' ? activeClass : inactiveClass;
+      document.getElementById('viewGridBtn').className = mode === 'grid' ? activeClass : inactiveClass;
+      document.getElementById('viewSplitBtn').className = mode === 'split' ? activeClass : inactiveClass;
+
+      gridSvg.classList.toggle('hidden', mode !== 'grid');
+      splitOverlay.classList.toggle('hidden', mode !== 'split');
+    }
+
+    document.getElementById('viewProcessedBtn').addEventListener('click', () => updateViewMode('processed'));
+    document.getElementById('viewGridBtn').addEventListener('click', () => updateViewMode('grid'));
+    document.getElementById('viewSplitBtn').addEventListener('click', () => updateViewMode('split'));
+
+    // Split Slider Dragging
+    let isDraggingSplit = false;
+    splitDivider.addEventListener('mousedown', () => isDraggingSplit = true);
+    window.addEventListener('mouseup', () => isDraggingSplit = false);
+    window.addEventListener('mousemove', (e) => {
+      if (!isDraggingSplit) return;
+      const rect = canvasWrapper.getBoundingClientRect();
+      let percent = ((e.clientX - rect.left) / rect.width) * 100;
+      percent = Math.max(5, Math.min(95, percent));
+      state.splitPercent = percent;
+      splitDivider.style.left = `${percent}%`;
+      originalCanvas.style.clipPath = `polygon(0 0, ${percent}% 0, ${percent}% 100%, 0 100%)`;
+    });
+
+    // Background Mode Buttons
+    document.querySelectorAll('.bg-mode-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.bg-mode-btn').forEach(b => b.classList.replace('border-indigo-500', 'border-transparent'));
+        btn.classList.replace('border-transparent', 'border-indigo-500');
+        const bg = btn.dataset.bg;
+        canvasWrapper.className = `relative shadow-2xl rounded-lg overflow-hidden border border-[#273449] ${
+          bg === 'checker' ? 'bg-checker' : bg === 'dark' ? 'bg-[#080c14]' : bg === 'white' ? 'bg-white' : 'bg-line-chat'
+        }`;
+      });
+    });
+
+    // Right Sidebar Tab Switcher
+    tabListBtn.addEventListener('click', () => {
+      tabListBtn.className = 'flex-1 py-1.5 text-xs font-bold text-indigo-400 border-b-2 border-indigo-500 flex items-center justify-center gap-1.5';
+      tabSimBtn.className = 'flex-1 py-1.5 text-xs font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center justify-center gap-1.5';
+      galleryContainer.classList.remove('hidden');
+      simulatorContainer.classList.add('hidden');
+    });
+
+    tabSimBtn.addEventListener('click', () => {
+      tabSimBtn.className = 'flex-1 py-1.5 text-xs font-bold text-indigo-400 border-b-2 border-indigo-500 flex items-center justify-center gap-1.5';
+      tabListBtn.className = 'flex-1 py-1.5 text-xs font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center justify-center gap-1.5';
+      simulatorContainer.classList.remove('hidden');
+      simulatorContainer.classList.add('flex');
+      galleryContainer.classList.add('hidden');
+    });
+
+    // Sliders & Presets Event Listeners
+    thresholdSlider.addEventListener('input', (e) => {
+      threshVal.textContent = e.target.value;
+      runProcessingPipeline();
+    });
+
+    smoothnessSlider.addEventListener('input', (e) => {
+      smoothVal.textContent = e.target.value;
+      runProcessingPipeline();
+    });
+
+    erosionSlider.addEventListener('input', (e) => {
+      erosionVal.textContent = `${e.target.value}px`;
+      runProcessingPipeline();
+    });
+
+    keyColorInput.addEventListener('input', (e) => {
+      keyColorVal.textContent = e.target.value.toUpperCase();
+      keyColorDisplay.style.backgroundColor = e.target.value;
+      runProcessingPipeline();
+    });
+
+    paddingSlider.addEventListener('input', (e) => {
+      paddingVal.textContent = `${e.target.value}px`;
+      runProcessingPipeline();
+    });
+
+    brushSizeSlider.addEventListener('input', (e) => {
+      brushSizeVal.textContent = `${e.target.value}px`;
+    });
+
+    cleanHolesToggle.addEventListener('change', runProcessingPipeline);
+    despillToggle.addEventListener('change', runProcessingPipeline);
+    colsInput.addEventListener('change', (e) => {
+      state.cols = parseInt(e.target.value) || 5;
+      runProcessingPipeline({ resetAdjustments: true });
+    });
+    rowsInput.addEventListener('change', (e) => {
+      state.rows = parseInt(e.target.value) || 4;
+      runProcessingPipeline({ resetAdjustments: true });
+    });
+
+    // Preset Grid Buttons
+    document.querySelectorAll('.grid-preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.grid-preset-btn').forEach(b => {
+          b.className = 'grid-preset-btn px-2 py-1.5 rounded-lg text-[10px] font-semibold bg-[#0e1422] text-slate-300 hover:bg-[#1f2a3f] border border-[#27354b] transition';
+        });
+        btn.className = 'grid-preset-btn px-2 py-1.5 rounded-lg text-[10px] font-bold bg-indigo-600 text-white border border-indigo-500 transition shadow-sm';
+        state.cols = parseInt(btn.dataset.cols);
+        state.rows = parseInt(btn.dataset.rows);
+        colsInput.value = state.cols;
+        rowsInput.value = state.rows;
+        runProcessingPipeline({ resetAdjustments: true });
+      });
+    });
+
+    reprocessBtn.addEventListener('click', () => {
+      if (!state.image) return;
+      if (state.slicingFinalized) enterPreSliceMode(true);
+      else finalizeSlicing();
+    });
+
+    document.getElementById('resetParamsBtn').addEventListener('click', () => {
+      keyColorInput.value = '#07F40E';
+      keyColorVal.textContent = '#07F40E';
+      keyColorDisplay.style.backgroundColor = '#07F40E';
+      thresholdSlider.value = 55;
+      threshVal.textContent = 55;
+      smoothnessSlider.value = 20;
+      smoothVal.textContent = 20;
+      erosionSlider.value = 1;
+      erosionVal.textContent = '1px';
+      cleanHolesToggle.checked = true;
+      despillToggle.checked = true;
+      paddingSlider.value = 10;
+      paddingVal.textContent = '10px';
+      runProcessingPipeline();
+      showToast('已還原為最佳去背參數');
+    });
+
+    // Upload Handlers
+    function loadImageFromFile(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          state.image = img;
+          emptyState.classList.add('hidden');
+          canvasWrapper.classList.remove('hidden');
+
+          // Auto-detect corner background color and update UI
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = img.width;
+          tempCanvas.height = img.height;
+          const tCtx = tempCanvas.getContext('2d');
+          tCtx.drawImage(img, 0, 0);
+          const cornerPix = tCtx.getImageData(2, 2, 1, 1).data;
+          const detectedHex = '#' + ((1 << 24) + (cornerPix[0] << 16) + (cornerPix[1] << 8) + cornerPix[2]).toString(16).slice(1).toUpperCase();
+          keyColorInput.value = detectedHex;
+          keyColorVal.textContent = detectedHex;
+          keyColorDisplay.style.backgroundColor = detectedHex;
+
+          runProcessingPipeline({ resetAdjustments: true });
+          showToast('圖片載入成功：已完成去背，請先逐格做「分割前對位」，再確認切圖');
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        loadImageFromFile(e.target.files[0]);
+      }
+    });
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('border-indigo-500');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('border-indigo-500');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('border-indigo-500');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        loadImageFromFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    loadSampleBtn.addEventListener('click', loadGeckoSample);
+    emptySampleBtn.addEventListener('click', loadGeckoSample);
+
+    // Initialize Split Divider Position
+    splitDivider.style.left = '50%';
+    originalCanvas.style.clipPath = 'polygon(0 0, 50% 0, 50% 100%, 0 100%)';
+    updateSlicingWorkflowUI();
+  </script>
 </body>
 </html>
